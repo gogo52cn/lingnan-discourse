@@ -294,6 +294,15 @@ pt:
         one: "1 utilizador"
         other: "%{count} utilizadores"
     groups:
+      empty:
+        posts: "Não há nenhuma publicação feita por membros deste grupo."
+        members: "Não há nenhum membro neste grupo."
+        mentions: "Não há nenhuma menção deste grupo."
+        messages: "Não há nenhuma mensagem para este grupo."
+        topics: "Não há nenhum tópico feito por membros deste grupo."
+      add: "Adicionar"
+      selector_placeholder: "Adicionar membros"
+      owner: "proprietário"
       visible: "O grupo é visível para todos os utilizadores"
       title:
         one: "grupo"
@@ -301,7 +310,7 @@ pt:
       members: "Membros"
       posts: "Mensagens"
       alias_levels:
-        title: "Quem pode usar este grupo como pseudónimo?"
+        title: "Quem pode mandar mensagens e @mencionar este grupo?"
         nobody: "Ninguém"
         only_admins: "Apenas administradores"
         mods_and_admins: "Apenas moderadores e Administradores"
@@ -310,6 +319,19 @@ pt:
       trust_levels:
         title: "Nível de confiança concedido automaticamente a membros quando são adicionados:"
         none: "Nenhum"
+      notifications:
+        watching:
+          title: "A vigiar"
+          description: "Será notificado de cada nova publicação em todas as mensagens, e uma contagem de novas respostas será exibida."
+        tracking:
+          title: "A Acompanhar"
+          description: "Será notificado se alguém mencionar o seu @nome ou lhe responder, e uma contagem de novas respostas será exibida."
+        regular:
+          title: "Habitual"
+          description: "Será notificado se alguém mencionar o seu @nome ou responder-lhe."
+        muted:
+          title: "Mudo"
+          description: "Não será notificado de nada relacionado com novos tópicos neste grupo."
     user_action_groups:
       '1': "Gostos Dados"
       '2': "Gostos Recebidos"
@@ -319,7 +341,6 @@ pt:
       '6': "Respostas"
       '7': "Menções"
       '9': "Citações"
-      '10': "Favoritos"
       '11': "Edições"
       '12': "Itens Enviados"
       '13': "Caixa de Entrada"
@@ -329,6 +350,7 @@ pt:
       all_subcategories: "todas"
       no_subcategory: "nenhuma"
       category: "Categoria"
+      category_list: "Exibir lista de categorias"
       reorder:
         title: "Re-organizar Categorias"
         title_long: "Re-organizar a lista de categorias"
@@ -385,6 +407,7 @@ pt:
       invited_by: "Convidado Por"
       trust_level: "Nível de Confiança"
       notifications: "Notificações"
+      statistics: "Estatísticas"
       desktop_notifications:
         label: "Notificações de Desktop"
         not_supported: "Não são suportadas notificações neste navegador. Desculpe."
@@ -428,6 +451,8 @@ pt:
       users: "Utilizadores"
       muted_users: "Mudo"
       muted_users_instructions: "Suprimir todas as notificações destes utilizadores."
+      muted_topics_link: "Mostrar tópicos mudos"
+      automatically_unpin_topics: "Desafixar tópicos automaticamente quando você chegar ao final."
       staff_counters:
         flags_given: "sinalizações úteis"
         flagged_posts: "mensagens sinalizadas"
@@ -436,8 +461,14 @@ pt:
         warnings_received: "avisos"
       messages:
         all: "Todas"
-        mine: "Minha"
-        unread: "Não lidas"
+        inbox: "Caixa de Entrada"
+        sent: "Enviado"
+        archive: "Arquivo"
+        groups: "Os Meus Grupos"
+        bulk_select: "Selecionar mensagens"
+        move_to_inbox: "Mover para Caixa de Entrada"
+        failed_to_move: "Falha ao mover as mensagens selecionadas (talvez a sua rede esteja em baixo)"
+        select_all: "Selecionar Tudo"
       change_password:
         success: "(email enviado)"
         in_progress: "(a enviar email)"
@@ -482,8 +513,8 @@ pt:
         ok: "Enviar-lhe-emos um email para confirmar"
         invalid: "Por favor introduza um endereço de email válido"
         authenticated: "O seu email foi autenticado por {{provider}}"
+        frequency_immediately: "Enviar-lhe-emos um email imediatamente caso não leia o que lhe estamos a enviar."
         frequency:
-          zero: "Enviar-lhe-emos um email imediatamente caso não leia o que lhe estamos a enviar."
           one: "Só iremos enviar-lhe um email se não o tivermos visto no último minuto."
           other: "Só iremos enviar-lhe um email se não o tivermos visto nos últimos {{count}} minutos."
       name:
@@ -636,7 +667,6 @@ pt:
     logout: "A sua sessão estava encerrada."
     refresh: "Atualizar"
     read_only_mode:
-      enabled: "O modo só de leitura está ativo. Pode continuar a navegar no sítio mas as interações podem não funcionar."
       login_disabled: "A função de início de sessão está desativada enquanto o sítio se encontrar no modo só de leitura."
     too_few_topics_and_posts_notice: "Vamos <a href='http://blog.discourse.org/2014/08/building-a-discourse-community/'>começar esta discussão!</a> Atualmente existem <strong>%{currentTopics} / %{requiredTopics}</strong> tópicos e <strong>%{currentPosts} / %{requiredPosts}</strong> mensagens. Novos visitantes precisam de conversações para ler e responder a."
     too_few_topics_notice: "Vamos <a href='http://blog.discourse.org/2014/08/building-a-discourse-community/'>começar esta discussão!</a> Atualmente existem <strong>%{currentTopics} / %{requiredTopics}</strong> tópios. Novos visitantes precisam de algumas conversações para ler e responder a."
@@ -664,14 +694,6 @@ pt:
       hidden_for_session: "OK, Irei perguntar-lhe amanhã. Pode sempre usar 'Iniciar Sessão' para criar uma conta, também."
       intro: "Olá! :heart_eyes: Parece que está a gostar da discussão, mas não está inscrito para uma conta."
       value_prop: "Quando cria uma conta, nós lembramo-nos exatamente do que leu, por isso volta sempre ao sítio onde ficou. Também recebe notificações, aqui ou por email, sempre que novas mensagens são feitas. E pode gostar de mensagens para partilhar o amor. :heartbeat:"
-      methods:
-        sso: "Inscrever-se é fácil: tudo o que precisa é uma conta no sítio principal."
-        only_email: "Inscrever-se é fácil: tudo o que precisa é um email e uma palavra-passe."
-        only_other: "Utilize a sua conta %{provider} para se inscrever."
-        one_and_email: "Utilize a sua conta %{provider}, ou um email e palavra-passe, para se inscrever."
-        multiple_no_email: "Inscrever-se é fácil: utilize qualquer um dos nossos %{count} inícios de sessão sociais."
-        multiple: "Inscrever-se é fácil: utilize qualquer um dos nossos %{count} inícios de sessão sociais, ou um email e palavra-passe."
-        unknown: "erro ao obter métodos suportados de início de sessão "
     summary:
       enabled_description: "Está a ver um resumo deste tópico: as mensagens mais interessantes são determinados pela comunidade."
       description: "Existem <b>{{count}}</b> respostas."
@@ -754,8 +776,11 @@ pt:
     google: "Google"
     twitter: "Twitter"
     emoji_one: "Emoji One"
+    shortcut_modifier_key:
+      shift: 'Shift'
+      ctrl: 'Ctrl'
+      alt: 'Alt'
     composer:
-      emoji: "Emoji :smile:"
       more_emoji: "mais..."
       options: "Opções"
       whisper: "susurro"
@@ -767,6 +792,7 @@ pt:
       saved_local_draft_tip: "guardado localmente"
       similar_topics: "O seu tópico é similar a..."
       drafts_offline: "rascunhos offline"
+      group_mentioned: "Ao usar {{group}}, estará a notificar <a href='{{group_link}}'>{{count}} pessoas</a>."
       error:
         title_missing: "O título é obrigatório"
         title_too_short: "O título tem que ter pelo menos {{min}} caracteres."
@@ -821,6 +847,7 @@ pt:
       toggler: "esconder ou exibir o painel de composição"
       modal_ok: "OK"
       modal_cancel: "Cancelar"
+      cant_send_pm: "Desculpe, não pode enviar uma mensagem para %{username}."
       admin_options_title: "Configurações opcionais do pessoal para este tópico"
       auto_close:
         label: "Tempo de fecho automático do tópico:"
@@ -837,6 +864,7 @@ pt:
       more: "ver notificações antigas"
       total_flagged: "total de mensagens sinalizadas"
       mentioned: "<i title='mentioned' class='fa fa-at'></i><p><span>{{username}}</span> {{description}}</p>"
+      group_mentioned: "<i title='group mentioned' class='fa fa-at'></i><p><span>{{username}}</span> {{description}}</p>"
       quoted: "<i title='quoted' class='fa fa-quote-right'></i><p><span>{{username}}</span> {{description}}</p>"
       replied: "<i title='replied' class='fa fa-reply'></i><p><span>{{username}}</span> {{description}}</p>"
       posted: "<i title='replied' class='fa fa-reply'></i><p><span>{{username}}</span> {{description}}</p>"
@@ -865,6 +893,7 @@ pt:
         granted_badge: "Distintivo concedido"
       popup:
         mentioned: '{{username}} mencionou-o em "{{topic}}" - {{site_title}}'
+        group_mentioned: '{{username}} mencionou-o em "{{topic}}" - {{site_title}}'
         quoted: '{{username}} citou-o em "{{topic}}" - {{site_title}}'
         replied: '{{username}} respondeu-lhe em "{{topic}}" - {{site_title}}'
         posted: '{{username}} publicou em "{{topic}}" - {{site_title}}'
@@ -917,11 +946,10 @@ pt:
         reset_read: "Repor Leitura"
         delete: "Eliminar Tópicos"
         dismiss: "Destituir"
+        dismiss_read: "Destituir todos os não lidos"
         dismiss_button: "Destituir..."
         dismiss_tooltip: "Destituir apenas novas mensagens ou parar o acompanhamento de tópicos"
-        dismiss_body: "Gostaria de destituir apenas as novas mensagens nestes tópicos, ou destituir os tópicos por inteiro?"
-        dismiss_posts: "Destituir Apenas Novas Mensagens"
-        dismiss_topics: "Destituir Tópicos"
+        also_dismiss_topics: "Parar de acompanhar estes tópicos para que estes nunca me apareçam como não lidos novamente"
         dismiss_new: "Destituir Novo"
         toggle: "ativar seleção em massa de tópicos"
         actions: "Ações em Massa"
@@ -966,6 +994,12 @@ pt:
       create: 'Novo Tópico'
       create_long: 'Criar um novo Tópico'
       private_message: 'Iniciar uma mensagem'
+      archive_message:
+        help: 'Mover mensagem para o seu arquivo'
+        title: 'Arquivo'
+      move_to_inbox:
+        title: 'Mover para Caixa de Entrada'
+        help: 'Mover mensagem de volta para a Caixa de Entrada'
       list: 'Tópicos'
       new: 'novo tópico'
       unread: 'não lido'
@@ -1016,6 +1050,7 @@ pt:
       auto_close_title: 'Configurações para Fechar Automaticamente'
       auto_close_save: "Guardar"
       auto_close_remove: "Não Fechar Este Tópico Automaticamente"
+      auto_close_immediate: "A última mensagem neste tópico já tem %{hours} horas, por isso o tópico será fechado imediatamente."
       progress:
         title: progresso do tópico
         go_top: "topo"
@@ -1107,25 +1142,24 @@ pt:
         unpin_until: "Remover este tópico do topo da categoria {{categoryLink}} ou espere até <strong>%{until}</strong>."
         pin_note: "Os utilizadores podem desafixar individualmente o tópico por si próprios."
         pin_validation: "É necessária uma data para fixar este tópico."
+        not_pinned: "Não há tópicos fixados em {{categoryLink}}."
         already_pinned:
-          zero: "Não há tópicos fixados em {{categoryLink}}."
-          one: "Tópicos atualmente fixados em {{categoryLink}}: <strong class='badge badge-notification unread'>1</strong>."
-          other: "Tópicos atualmente fixados em {{categoryLink}}: <strong class='badge badge-notification unread'>{{count}}</strong>."
+          one: "Tópicos atualmente fixados em {{categoryLink}}: <strong class='badge badge-notification unread'>1</strong>"
+          other: "Tópicos atualmente fixados em {{categoryLink}}: <strong class='badge badge-notification unread'>{{count}}</strong>"
         pin_globally: "Fazer com que este tópico apareça no topo da lista de todos os tópicos até"
         confirm_pin_globally: "Já tem {{count}} tópicos fixados globalmente. Demasiados tópicos fixados podem ser um fardo para utilizadores novos e anónimos. Tem a certeza que deseja fixar outro tópico globalmente?"
         unpin_globally: "Remover este tópico do topo de todas as listas de tópicos."
         unpin_globally_until: "Remover este tópico do topo da lista de todos os tópicos ou espere até <strong>%{until}</strong>."
         global_pin_note: "Os utilizadores podem desafixar individualmente o tópico por si próprios."
+        not_pinned_globally: "Não existem tópicos fixados globalmente."
         already_pinned_globally:
-          zero: "Não há tópicos fixados globalmente."
-          one: "Tópicos atualmente fixados globalmente: <strong class='badge badge-notification unread'>1</strong>."
-          other: "Tópicos atualmente fixados globalmente: <strong class='badge badge-notification unread'>{{count}}</strong>."
+          one: "Tópicos atualmente fixados globalmente: <strong class='badge badge-notification unread'>1</strong>"
+          other: "Tópicos atualmente fixados globalmente: <strong class='badge badge-notification unread'>{{count}}</strong>"
         make_banner: "Tornar este tópico numa faixa que apareça no topo de todas as páginas."
         remove_banner: "Remover a faixa que aparece no topo de todas as páginas."
         banner_note: "Os utilizadores podem destituir a faixa ao fecharem-na. Apenas um tópico pode ser considerado uma faixa em qualquer momento."
-        already_banner:
-          zero: "Não há nenhum tópico de faixa."
-          one: "<strong class='badge badge-notification unread'>Há</strong> atualmente um tópico de faixa."
+        no_banner_exists: "Não existe tópico de faixa."
+        banner_exists: "<strong class='badge badge-notification unread'>Existe</strong> atualmente um tópico de faixa."
       inviting: "A Convidar..."
       automatically_add_to_groups_optional: "Este convite também inclui acesso a estes grupos: (opcional, apenas Administração)"
       automatically_add_to_groups_required: "Esse convite também inclui acesso a estes grupos: (<b>Obrigatório<b>, apenas Administração)"
@@ -1137,6 +1171,7 @@ pt:
         success: "Convidámos esse utilizador para participar nesta mensagem."
         error: "Pedimos desculpa, ocorreu um erro ao convidar esse utilizador."
         group_name: "nome do grupo"
+      controls: "Controlos de Tópico"
       invite_reply:
         title: 'Convidar'
         username_placeholder: "nome de utilizador"
@@ -1231,8 +1266,8 @@ pt:
       has_likes_title:
         one: "1 pessoa gostou desta mensagem"
         other: "{{count}} pessoas gostaram desta mensagem"
+      has_likes_title_only_you: "você gostou desta mensagem"
       has_likes_title_you:
-        zero: "você gostou desta mensagem"
         one: "você e 1 outra pessoa gostaram desta mensagem"
         other: "você e {{count}} outras pessoas gostaram desta mensagem"
       errors:
@@ -1254,7 +1289,7 @@ pt:
       via_email: "esta mensagem chegou por email"
       whisper: "esta mensagem é um susurro privado para os moderadores"
       wiki:
-        about: "esta mensagem é uma wiki; utilizadores comuns podem editá-la"
+        about: "esta mensagem é uma wiki"
       archetypes:
         save: 'Guardar as Opções'
       controls:
@@ -1374,10 +1409,6 @@ pt:
           vote:
             one: "1 pessoa votou nesta mensagem"
             other: "{{count}} pessoas votaram nesta mensagem"
-      edits:
-        one: 1 edição
-        other: "{{count}} edições"
-        zero: sem edições
       delete:
         confirm:
           one: "Tem a certeza que quer eliminar essa mensagem?"
@@ -1482,6 +1513,7 @@ pt:
       submit_tooltip: "Submeter a sinalização privada"
       take_action_tooltip: "Atingir imediatamente o limite de sinalizações, em vez de esperar por mais denúncias da comunidade"
       cant: "Pedimos desculpa, não é possível colocar uma sinalização nesta mensagem neste momento."
+      notify_staff: 'Notificar Pessoal'
       formatted_name:
         off_topic: "Está fora do contexto"
         inappropriate: "É inapropriado"
@@ -1563,8 +1595,8 @@ pt:
       with_topics: "%{filter} tópicos"
       with_category: "%{filter} %{category} tópicos"
       latest:
-        title:
-          zero: "Recentes"
+        title: "Recente"
+        title_with_count:
           one: "Recente (1)"
           other: "Recentes ({{count}})"
         help: "tópicos com mensagens recentes"
@@ -1582,10 +1614,10 @@ pt:
         title_in: "Categoria - {{categoryName}}"
         help: "todos os tópicos agrupados por categoria"
       unread:
-        title:
-          zero: "Não lido"
-          one: "Não lido (1)"
-          other: "Não lidos ({{count}})"
+        title: "Não Lido"
+        title_with_count:
+          one: "Não Lido (1)"
+          other: "Não Lidos ({{count}})"
         help: "tópicos que está atualmente a vigiar ou a acompanhar com mensagens não lidas"
         lower_title_with_count:
           one: "1 não lido"
@@ -1595,8 +1627,8 @@ pt:
           one: "1 novo"
           other: "{{count}} novos"
         lower_title: "novo"
-        title:
-          zero: "Novo"
+        title: "Novo"
+        title_with_count:
           one: "Novo (1)"
           other: "Novos ({{count}})"
         help: "tópicos criados nos últimos dias"
@@ -1607,8 +1639,8 @@ pt:
         title: "Marcadores"
         help: "tópicos que marcou"
       category:
-        title:
-          zero: "{{categoryName}}"
+        title: "{{categoryName}}"
+        title_with_count:
           one: "{{categoryName}} (1)"
           other: "{{categoryName}} ({{count}})"
         help: "tópicos recentes na categoria {{categoryName}}"
@@ -1770,6 +1802,7 @@ pt:
         delete_confirm: "Eliminar este grupo?"
         delete_failed: "Impossível eliminar grupo. Se se trata de um grupo automático, não pode ser eliminado."
         delete_member_confirm: "Remova o '%{username}' do grupo '%{group}'?"
+        delete_owner_confirm: "Remover privilégios do proprietário para '%{username}'?"
         name: "Nome"
         add: "Adicionar"
         add_members: "Adicionar membros"
@@ -1783,6 +1816,10 @@ pt:
         automatic_membership_retroactive: "Aplicar a mesma regra de domínio de email para adicionar utilizadores registados existentes"
         default_title: "Título padrão para todos os utilizadores neste grupo"
         primary_group: "Definir automaticamente como grupo primário"
+        group_owners: Proprietários
+        add_owners: Adicionar proprietários
+        incoming_email: "Endereço de email de entrada personalizado"
+        incoming_email_placeholder: "introduza o endereço de email"
       api:
         generate_master: "Gerar Chave Mestra API "
         none: "Não existem chaves API ativas neste momento."
@@ -1911,6 +1948,14 @@ pt:
         color: "Cor"
         opacity: "Opacidade"
         copy: "Copiar"
+        email_templates:
+          title: "Modelos de Email"
+          subject: "Assunto"
+          multiple_subjects: "Este modelo de email tem múltiplos assuntos."
+          body: "Corpo"
+          none_selected: "Selecione um modelo de email para começar a editar."
+          revert: "Reverter Alterações"
+          revert_confirm: "Tem a certeza que quer reverter as suas alterações?"
         css_html:
           title: "CSS/HTML"
           long_title: "Personalizações CSS e HTML"
@@ -1959,9 +2004,8 @@ pt:
             name: 'wiki'
             description: "Cor base utilizada para o fundo de mensagens wiki"
       email:
-        title: "Email"
         settings: "Configurações"
-        all: "Todos"
+        preview_digest: "Pré-visualizar Resumo"
         sending_test: "A enviar Email de teste..."
         error: "<b>ERRO</b> - %{server_error}"
         test_error: "Occorreu um problema no envio do email de teste. Por favor verifique novamente as suas definições de email, verifique se o seu host não está a bloquear conexões de email, e tente novamente."
@@ -1976,7 +2020,6 @@ pt:
         send_test: "Enviar Email de Teste"
         sent_test: "enviado!"
         delivery_method: "Método de Entrega"
-        preview_digest: "Pré-visualizar Resumo"
         preview_digest_desc: "Pré-visualizar o conteúdo dos emails de resumo enviados aos utilizadores inativos."
         refresh: "Atualizar"
         format: "Formato"
@@ -2034,6 +2077,7 @@ pt:
             change_site_setting: "alterar configurações do sítio"
             change_site_customization: "alterar personalização do sítio"
             delete_site_customization: "remover personalização do sítio"
+            change_site_text: "alterar texto do sítio"
             suspend_user: "utilizador suspenso"
             unsuspend_user: "utilizador não suspenso"
             grant_badge: "conceder distintivo"
@@ -2113,9 +2157,9 @@ pt:
           pending: 'Utilizadores com Confirmação Pendente'
           newuser: 'Utilizadores no Nível de Confiança 0 (Novo Utilizador)'
           basic: 'Utilizadores no Nível de Confiança 1 (Utilizador Básico)'
-          regular: 'Utilizadores no Nível de Confiança 2 (Membro)'
-          leader: 'Utilizadores no Nível de Confiança 3 (Habitual)'
-          elder: 'Utilizadores no Nível de Confiança 4(Líder)'
+          member: 'Utilizadores no Nível de Confiança 2 (Membro)'
+          regular: 'Utilizadores no Nível de Confiança 3 (Habitual)'
+          leader: 'Utilizadores no Nível de Confiança 4 (Líder)'
           staff: "Pessoal"
           admins: 'Utilizadores da Administração'
           moderators: 'Moderadores'
@@ -2225,7 +2269,7 @@ pt:
         unlock_trust_level: "Desbloquear Nível de Confiança"
         tl3_requirements:
           title: "Requisitos para o Nível de Confiança 3"
-          table_title: "Nos últimos 100 dias:"
+          table_title: "Nos últimos %{time_period} dias:"
           value_heading: "Valor"
           requirement_heading: "Requisito"
           visits: "Visitas"
@@ -2286,8 +2330,15 @@ pt:
           confirm: 'Confirmação'
           dropdown: "Suspenso"
       site_text:
-        none: "Escolha um tipo de conteúdo para começar a editar."
+        description: "Pode personalizar qualquer texto no seu fórum. Por favor comece por pesquisar abaixo:"
+        search: "Pesquisar o texto que gostaria de editar"
         title: 'Conteúdo do Texto'
+        edit: 'editar'
+        revert: "Reverter Alterações"
+        revert_confirm: "Tem a certeza que quer reverter as suas alterações?"
+        go_back: "De volta à Pesquisa"
+        recommended: "Recomendamos personalizar o seguinte texto para que se aplique às suas necessidades."
+        show_overriden: 'Apenas mostrar valores alterados'
       site_settings:
         show_overriden: 'Apenas mostrar valores alterados'
         title: 'Configurações'
@@ -2375,8 +2426,8 @@ pt:
           bad_count_warning:
             header: "AVISO!"
             text: "Estão em falta amostras de concessão. Isto acontece quando a \"query\" do sistema de distintivos devolve IDs de nomes de utilizador ou IDs de mensagens que não existem. Isto pode causar resultados inesperados futuramente, sendo que deverá rever a sua \"query\"."
+          no_grant_count: "Nenhuns distintivos a atribuir."
           grant_count:
-            zero: "Nenhuns distintivos a atribuir."
             one: "<b>1</b> distintivo a atribuir."
             other: "<b>%{count}</b> distintivos a atribuir."
           sample: "Amostra:"

@@ -1,6 +1,7 @@
 import userSearch from 'discourse/lib/user-search';
 import { default as computed, on } from 'ember-addons/ember-computed-decorators';
 import { linkSeenMentions, fetchUnseenMentions } from 'discourse/lib/link-mentions';
+import { linkSeenCategoryHashtags, fetchUnseenCategoryHashtags } from 'discourse/lib/link-category-hashtags';
 
 export default Ember.Component.extend({
   classNames: ['wmd-controls'],
@@ -53,11 +54,13 @@ export default Ember.Component.extend({
       template,
       dataSource: term => userSearch({ term, topicId, includeGroups: true }),
       key: "@",
-      transformComplete: v => v.username || v.usernames.join(", @")
+      transformComplete: v => v.username || v.name
     });
 
+    $input.on('scroll', () => Ember.run.throttle(this, this._syncEditorAndPreviewScroll, 20));
+
     // Focus on the body unless we have a title
-    if (!this.get('composer.canEditTitle') && !Discourse.Mobile.mobileView) {
+    if (!this.get('composer.canEditTitle') && !this.capabilities.isIOS) {
       this.$('.d-editor-input').putCursorAtEnd();
     }
 
@@ -86,22 +89,74 @@ export default Ember.Component.extend({
     }
   },
 
-  _renderUnseen: function($preview, unseen) {
-    fetchUnseenMentions($preview, unseen, this.siteSettings).then(() => {
+  _syncEditorAndPreviewScroll() {
+    const $input = this.$('.d-editor-input');
+    const $preview = this.$('.d-editor-preview');
+
+    if ($input.scrollTop() === 0) {
+      $preview.scrollTop(0);
+      return;
+    }
+
+    const inputHeight = $input[0].scrollHeight;
+    const previewHeight = $preview[0].scrollHeight;
+    if (($input.height() + $input.scrollTop() + 100) > inputHeight) {
+      // cheat, special case for bottom
+      $preview.scrollTop(previewHeight);
+      return;
+    }
+
+    const scrollPosition = $input.scrollTop();
+    const factor = previewHeight / inputHeight;
+    const desired = scrollPosition * factor;
+    $preview.scrollTop(desired + 50);
+  },
+
+  _renderUnseenMentions: function($preview, unseen) {
+    fetchUnseenMentions($preview, unseen).then(() => {
       linkSeenMentions($preview, this.siteSettings);
-      this.trigger('previewRefreshed', $preview);
+      this._warnMentionedGroups($preview);
     });
   },
 
-  _resetUpload() {
-    this.setProperties({ uploadProgress: 0, isUploading: false });
-    this.set('composer.reply', this.get('composer.reply').replace(this.get('uploadPlaceholder'), ""));
+  _renderUnseenCategoryHashtags: function($preview, unseen) {
+    fetchUnseenCategoryHashtags(unseen).then(() => {
+      linkSeenCategoryHashtags($preview);
+    });
+  },
+
+  _warnMentionedGroups($preview) {
+    Ember.run.scheduleOnce('afterRender', () => {
+      this._warnedMentions = this._warnedMentions || [];
+      var found = [];
+      $preview.find('.mention-group.notify').each((idx,e) => {
+        const $e = $(e);
+        var name = $e.data('name');
+        found.push(name);
+        if (this._warnedMentions.indexOf(name) === -1){
+          this._warnedMentions.push(name);
+          this.sendAction('groupsMentioned', [{name: name, user_count: $e.data('mentionable-user-count')}]);
+        }
+      });
+
+      this._warnedMentions = found;
+    });
+  },
+
+  _resetUpload(removePlaceholder) {
+    this._validUploads--;
+    if (this._validUploads === 0) {
+      this.setProperties({ uploadProgress: 0, isUploading: false, isCancellable: false });
+    }
+    if (removePlaceholder) {
+      this.set('composer.reply', this.get('composer.reply').replace(this.get('uploadPlaceholder'), ""));
+    }
   },
 
   _bindUploadTarget() {
     this._unbindUploadTarget(); // in case it's still bound, let's clean it up first
 
-    const $element = this.$();;
+    const $element = this.$();
     const csrf = this.session.get('csrfToken');
     const uploadPlaceholder = this.get('uploadPlaceholder');
 
@@ -123,16 +178,19 @@ export default Ember.Component.extend({
     });
 
     $element.on("fileuploadsend", (e, data) => {
-      // add upload placeholder
-      this.appEvents.trigger('composer:insert-text', uploadPlaceholder);
+      this._validUploads++;
+      // add upload placeholders (as much placeholders as valid files dropped)
+      const placeholder = _.times(this._validUploads, () => uploadPlaceholder).join("\n");
+      this.appEvents.trigger('composer:insert-text', placeholder);
 
-      if (data.xhr) {
+      if (data.xhr && data.originalFiles.length === 1) {
+        this.set("isCancellable", true);
         this._xhr = data.xhr();
       }
     });
 
     $element.on("fileuploadfail", (e, data) => {
-      this._resetUpload();
+      this._resetUpload(true);
 
       const userCancelled = this._xhr && this._xhr._userCancelled;
       this._xhr = null;
@@ -148,13 +206,14 @@ export default Ember.Component.extend({
         if (!this._xhr || !this._xhr._userCancelled) {
           const markdown = Discourse.Utilities.getUploadMarkdown(upload);
           this.set('composer.reply', this.get('composer.reply').replace(uploadPlaceholder, markdown));
+          this._resetUpload(false);
+        } else {
+          this._resetUpload(true);
         }
       } else {
+        this._resetUpload(true);
         Discourse.Utilities.displayErrorForUpload(upload);
       }
-
-      // reset upload state
-      this._resetUpload();
     });
 
     if (Discourse.Mobile.mobileView) {
@@ -227,7 +286,7 @@ export default Ember.Component.extend({
 
                 // Create a Blob to upload.
                 const image = new Image();
-                image.onload = function() {
+                image.onload = () => {
                   // Create a new canvas.
                   const canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas');
                   canvas.height = image.height;
@@ -252,6 +311,7 @@ export default Ember.Component.extend({
 
   @on('willDestroyElement')
   _unbindUploadTarget() {
+    this._validUploads = 0;
     this.$(".mobile-file-upload").off("click.uploader");
     this.messageBus.unsubscribe("/uploads/composer");
     const $uploadTarget = this.$();
@@ -278,9 +338,8 @@ export default Ember.Component.extend({
       if (this._xhr) {
         this._xhr._userCancelled = true;
         this._xhr.abort();
-        this._resetUpload();
       }
-      this._resetUpload();
+      this._resetUpload(true);
     },
 
     showOptions() {
@@ -334,7 +393,15 @@ export default Ember.Component.extend({
       // Paint mentions
       const unseen = linkSeenMentions($preview, this.siteSettings);
       if (unseen.length) {
-        Ember.run.debounce(this, this._renderUnseen, $preview, unseen, 500);
+        Ember.run.debounce(this, this._renderUnseenMentions, $preview, unseen, 500);
+      }
+
+      this._warnMentionedGroups($preview);
+
+      // Paint category hashtags
+      const unseenHashtags = linkSeenCategoryHashtags($preview);
+      if (unseenHashtags.length) {
+        Ember.run.debounce(this, this._renderUnseenCategoryHashtags, $preview, unseenHashtags, 500);
       }
 
       const post = this.get('composer.post');
@@ -349,6 +416,7 @@ export default Ember.Component.extend({
 
       // Paint oneboxes
       $('a.onebox', $preview).each((i, e) => Discourse.Onebox.load(e, refresh));
+      this.trigger('previewRefreshed', $preview);
     },
   }
 });

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'rails_helper'
 
 describe UsersController do
 
@@ -242,11 +242,13 @@ describe UsersController do
       context 'when the new email address is taken' do
         let!(:other_user) { Fabricate(:coding_horror) }
         it 'raises an error' do
-          expect { xhr :put, :change_email, username: user.username, email: other_user.email }.to raise_error(Discourse::InvalidParameters)
+          xhr :put, :change_email, username: user.username, email: other_user.email
+          expect(response).to_not be_success
         end
 
         it 'raises an error if there is whitespace too' do
-          expect { xhr :put, :change_email, username: user.username, email: other_user.email + ' ' }.to raise_error(Discourse::InvalidParameters)
+          xhr :put, :change_email, username: user.username, email: other_user.email + ' '
+          expect(response).to_not be_success
         end
       end
 
@@ -254,8 +256,21 @@ describe UsersController do
         let!(:other_user) { Fabricate(:user, email: 'case.insensitive@gmail.com')}
 
         it 'raises an error' do
-          expect { xhr :put, :change_email, username: user.username, email: other_user.email.upcase }.to raise_error(Discourse::InvalidParameters)
+          xhr :put, :change_email, username: user.username, email: other_user.email.upcase
+          expect(response).to_not be_success
         end
+      end
+
+      it 'raises an error when new email domain is present in email_domains_blacklist site setting' do
+        SiteSetting.email_domains_blacklist = "mailinator.com"
+        xhr :put, :change_email, username: user.username, email: "not_good@mailinator.com"
+        expect(response).to_not be_success
+      end
+
+      it 'raises an error when new email domain is not present in email_domains_whitelist site setting' do
+        SiteSetting.email_domains_whitelist = "discourse.org"
+        xhr :put, :change_email, username: user.username, email: new_email
+        expect(response).to_not be_success
       end
 
       context 'success' do
@@ -326,6 +341,16 @@ describe UsersController do
         expect(user.auth_token).to_not eq old_token
         expect(user.auth_token.length).to eq 32
       end
+
+      it "doesn't invalidate the token when loading the page" do
+        user = Fabricate(:user, auth_token: SecureRandom.hex(16))
+        email_token = user.email_tokens.create(email: user.email)
+
+        get :password_reset, token: email_token.token
+
+        email_token.reload
+        expect(email_token.confirmed).to eq(false)
+      end
     end
 
     context 'submit change' do
@@ -358,6 +383,24 @@ describe UsersController do
         expect(assigns(:user).errors).to be_blank
         expect(session[:current_user_id]).to be_blank
       end
+    end
+  end
+
+  describe '.confirm_email_token' do
+    let(:user) { Fabricate(:user) }
+
+    it "token doesn't match any records" do
+      email_token = user.email_tokens.create(email: user.email)
+      get :confirm_email_token, token: SecureRandom.hex, format: :json
+      expect(response).to be_success
+      expect(email_token.reload.confirmed).to eq(false)
+    end
+
+    it "token matches" do
+      email_token = user.email_tokens.create(email: user.email)
+      get :confirm_email_token, token: email_token.token, format: :json
+      expect(response).to be_success
+      expect(email_token.reload.confirmed).to eq(true)
     end
   end
 
@@ -743,6 +786,17 @@ describe UsersController do
           expect(inserted.custom_fields).not_to be_present
           expect(inserted.custom_fields["user_field_#{user_field.id}"]).to be_blank
         end
+      end
+    end
+
+    context "when taking over a staged account" do
+      let!(:staged) { Fabricate(:staged, email: "staged@account.com") }
+
+      it "succeeds" do
+        xhr :post, :create, email: staged.email, username: "zogstrip", password: "P4ssw0rd"
+        result = ::JSON.parse(response.body)
+        expect(result["success"]).to eq(true)
+        expect(User.find_by(email: staged.email).staged).to eq(false)
       end
     end
 
@@ -1363,6 +1417,18 @@ describe UsersController do
         expect(response).to be_forbidden
       end
 
+      it "raises an error when sso_overrides_avatar is disabled" do
+        SiteSetting.stubs(:sso_overrides_avatar).returns(true)
+        xhr :put, :pick_avatar, username: user.username, upload_id: upload.id, type: "custom"
+        expect(response).to_not be_success
+      end
+
+      it "raises an error when selecting the custom/uploaded avatar and allow_uploaded_avatars is disabled" do
+        SiteSetting.stubs(:allow_uploaded_avatars).returns(false)
+        xhr :put, :pick_avatar, username: user.username, upload_id: upload.id, type: "custom"
+        expect(response).to_not be_success
+      end
+
       it 'can successfully pick the system avatar' do
         xhr :put, :pick_avatar, username: user.username
         expect(response).to be_success
@@ -1514,6 +1580,49 @@ describe UsersController do
 
     end
 
+  end
+
+  describe ".is_local_username" do
+
+    let(:user) { Fabricate(:user) }
+
+    it "finds the user" do
+      xhr :get, :is_local_username, username: user.username
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json["valid"][0]).to eq(user.username)
+    end
+
+    it "supports multiples usernames" do
+      xhr :get, :is_local_username, usernames: [user.username, "system"]
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json["valid"].size).to eq(2)
+    end
+
+    it "never includes staged accounts" do
+      staged = Fabricate(:user, staged: true)
+      xhr :get, :is_local_username, usernames: [staged.username]
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+      expect(json["valid"].size).to eq(0)
+    end
+
+  end
+
+  context '#summary' do
+
+    it "generates summary info" do
+      user = Fabricate(:user)
+      create_post(user: user)
+
+      xhr :get, :summary, username: user.username_lower
+      expect(response).to be_success
+      json = JSON.parse(response.body)
+
+      expect(json["user_summary"]["topic_count"]).to eq(1)
+      expect(json["user_summary"]["post_count"]).to eq(1)
+    end
   end
 
 end

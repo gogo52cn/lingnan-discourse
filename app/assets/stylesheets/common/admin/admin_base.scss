@@ -38,9 +38,80 @@ $mobile-breakpoint: 700px;
   .filters input { margin-bottom: 0; }
 }
 
+.admin-contents .admin-reports-filter {
+  input[type="date"] {
+    width: 140px;
+  }
+}
+
 td.flaggers td {
   border-bottom: none;
   border-top: none;
+}
+
+.site-texts {
+  .search-area {
+    margin-bottom: 2em;
+    p {
+      margin-top: 0;
+    }
+
+    .site-text-search {
+      padding: 0.5em;
+      font-size: 1em;
+      width: 50%;
+    }
+
+    .extra-options {
+      float: right;
+      input[type=checkbox] {
+        margin-right: 0.5em;
+      }
+    }
+
+  }
+  .text-highlight {
+    font-weight: bold;
+  }
+
+  .site-text {
+    cursor: pointer;
+    border-bottom: 1px solid dark-light-diff($primary, $secondary, 90%, -60%);
+    margin-bottom: 0.5em;
+
+    &.overridden {
+      background-color: dark-light-diff($highlight, $secondary, 50%, -60%);
+    }
+
+    h3 {
+      font-weight: normal;
+      font-size: 1.1em;
+    }
+
+    button.edit {
+      float: right;
+    }
+    .site-text-value {
+      margin: 0.5em 5em 0.5em 0;
+      max-height: 100px;
+      color: dark-light-diff($primary, $secondary, 40%, -10%);
+    }
+
+  }
+
+  .edit-site-text {
+    textarea {
+      width: 80%;
+    }
+
+    .save-messages, .title {
+      margin-bottom: 1em;
+    }
+
+    .go-back {
+      margin-top: 1em;
+    }
+  }
 }
 
 .content-list li a span.count {
@@ -122,6 +193,10 @@ td.flaggers td {
 
 .admin-container .controls {
   @include clearfix;
+
+  .save-messages {
+    margin-top: 1em;
+  }
 }
 
 .admin-title {
@@ -253,7 +328,7 @@ td.flaggers td {
   position: relative;
   // The admin-nav becomes a slide-out menu at the mobile-nav breakpoint
   @media (max-width: $mobile-breakpoint) {
-    position: static;
+    position: absolute;
     z-index: 0;
     width: 50%;
   }
@@ -591,8 +666,7 @@ section.details {
     width: 100% !important;
     border-color: dark-light-choose(scale-color($primary, $lightness: 75%), scale-color($secondary, $lightness: 25%));
     .item {
-      width: 190px;
-      margin-right: 0 !important;
+      margin-right: 10px;
     }
   }
   .next, .previous {
@@ -1208,6 +1282,16 @@ table.api-keys {
 
 }
 
+.email-template {
+  input {
+    width: 100%;
+  }
+
+  label {
+    font-weight: bold;
+  }
+}
+
 .row.groups {
   input[type='text'] {
     width: 500px;
@@ -1454,7 +1538,7 @@ button.ru {
 
 @media all
 and (max-width : 850px) {
-  .nav-stacked {
+  html:not(.mobile-view) .admin-content .nav-stacked {
     .glyph {width: auto; position: relative;}
     > li > a {padding: 13px}
   }
@@ -1528,10 +1612,9 @@ and (max-width : 500px) {
     border-bottom: 1px solid #dfdfdf;
   }
   .actions {
-    font-size: 1.214em;
     float: right;
-    a {
-      margin-left: 5px;
+    .btn {
+      padding: 3px 6px;
     }
   }
 }
@@ -1688,6 +1771,30 @@ table#user-badges {
     color: dark-light-choose(scale-color($primary, $lightness: 50%), scale-color($secondary, $lightness: 50%));
     margin-bottom: 1em;
     max-width: 700px;
+  }
+}
+
+// Emails
+
+.email-list {
+  .filters input {
+    width: 100%;
+  }
+  .time {
+    width: 50px;
+  }
+  .username div {
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .addresses p {
+    margin: 2px 0;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

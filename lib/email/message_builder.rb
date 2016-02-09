@@ -7,7 +7,7 @@ module Email
       builder = Email::MessageBuilder.new(*builder_args)
       headers(builder.header_args) if builder.header_args.present?
       mail(builder.build_args).tap { |message|
-        if message and h = builder.html_part
+        if message && h = builder.html_part
           message.html_part = h
         end
       }
@@ -28,6 +28,8 @@ module Email
       }.merge!(@opts)
 
       if @template_args[:url].present?
+        @template_args[:header_instructions] = I18n.t('user_notifications.header_instructions')
+
         if @opts[:include_respond_instructions] == false
           @template_args[:respond_instructions] = ''
         else
@@ -59,14 +61,35 @@ module Email
       return unless html_override = @opts[:html_override]
 
       if @opts[:add_unsubscribe_link]
-        if response_instructions = @template_args[:respond_instructions]
-          respond_instructions = PrettyText.cook(response_instructions).html_safe
-          html_override.gsub!("%{respond_instructions}", respond_instructions)
-        end
-
-        unsubscribe_link = PrettyText.cook(I18n.t('unsubscribe_link', template_args)).html_safe
+        unsubscribe_link = PrettyText.cook(I18n.t('unsubscribe_link', template_args), sanitize: false).html_safe
         html_override.gsub!("%{unsubscribe_link}", unsubscribe_link)
+
+        if SiteSetting.unsubscribe_via_email_footer && @opts[:add_unsubscribe_via_email_link]
+          unsubscribe_via_email_link = PrettyText.cook(I18n.t('unsubscribe_via_email_link', hostname: Discourse.current_hostname), sanitize: false).html_safe
+          html_override.gsub!("%{unsubscribe_via_email_link}", unsubscribe_via_email_link)
+        else
+          html_override.gsub!("%{unsubscribe_via_email_link}", "")
+        end
+      else
+        html_override.gsub!("%{unsubscribe_link}", "")
+        html_override.gsub!("%{unsubscribe_via_email_link}", "")
       end
+
+      header_instructions = @template_args[:header_instructions]
+      if header_instructions.present?
+        header_instructions = PrettyText.cook(header_instructions, sanitize: false).html_safe
+        html_override.gsub!("%{header_instructions}", header_instructions)
+      else
+        html_override.gsub!("%{header_instructions}", "")
+      end
+
+      if response_instructions = @template_args[:respond_instructions]
+        respond_instructions = PrettyText.cook(response_instructions, sanitize: false).html_safe
+        html_override.gsub!("%{respond_instructions}", respond_instructions)
+      else
+        html_override.gsub!("%{respond_instructions}", "")
+      end
+
 
       styled = Email::Styles.new(html_override, @opts)
       styled.format_basic
@@ -88,6 +111,9 @@ module Email
       if @opts[:add_unsubscribe_link]
         body << "\n"
         body << I18n.t('unsubscribe_link', template_args)
+        if SiteSetting.unsubscribe_via_email_footer && @opts[:add_unsubscribe_via_email_link]
+          body << I18n.t('unsubscribe_via_email_link', hostname: Discourse.current_hostname)
+        end
       end
 
       body

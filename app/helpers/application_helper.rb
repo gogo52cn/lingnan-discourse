@@ -146,19 +146,14 @@ module ApplicationHelper
       end
     end
 
-    result.join("\n")
-  end
-
-  # Look up site content for a key. If the key is blank, you can supply a block and that
-  # will be rendered instead.
-  def markdown_content(key, replacements=nil)
-    result = PrettyText.cook(SiteText.text_for(key, replacements || {})).html_safe
-    if result.blank? && block_given?
-      yield
-      nil
-    else
-      result
+    if opts[:read_time] && opts[:read_time] > 0 && opts[:like_count] && opts[:like_count] > 0
+      result << tag(:meta, name: 'twitter:label1', value: I18n.t("reading_time"))
+      result << tag(:meta, name: 'twitter:data1', value: "#{opts[:read_time]} mins 🕑")
+      result << tag(:meta, name: 'twitter:label2', value: I18n.t("likes"))
+      result << tag(:meta, name: 'twitter:data2', value: "#{opts[:like_count]} ❤")
     end
+
+    result.join("\n")
   end
 
   def application_logo_url

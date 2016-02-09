@@ -212,7 +212,6 @@ uk:
       members: "Учасники"
       posts: "Дописи"
       alias_levels:
-        title: "Хто може використовувати цю групу як аліас?"
         nobody: "Ніхто"
         only_admins: "Лише адміністратори"
         mods_and_admins: "Лише модератори та адміністратори"
@@ -226,7 +225,6 @@ uk:
       '5': "Відповіді"
       '7': "Згадки"
       '9': "Цитати"
-      '10': "Позначені зірочкою"
       '11': "Редагування"
       '12': "Надіслані"
       '13': "Вхідні"
@@ -313,8 +311,6 @@ uk:
         warnings_received: "попередження"
       messages:
         all: "Всі"
-        mine: "Мої"
-        unread: "Непрочитані"
       change_password:
         success: "(лист надіслано)"
         in_progress: "(надсилання листа)"
@@ -819,9 +815,6 @@ uk:
           bookmark: "Ви лишили тут закладку"
           like: "Ви це вподобали"
           vote: "Ви проголосували за цей допис"
-      edits:
-        one: '{{count}} редагування'
-        other: "без редагувань"
       delete:
         confirm:
           one: "Ви впевнені, що хочете видалити цей допис?"
@@ -938,28 +931,14 @@ uk:
         title: "Категорії"
         title_in: "Категорія - {{categoryName}}"
         help: "всі теми, згруповані за категоріями"
-      unread:
-        title:
-          one: "Непрочитані ({{count}})"
-          other: "Непрочитані"
       new:
-        lower_title_with_count:
-          one: "{{count}} new"
         lower_title: "new"
-        title:
-          zero: "Новий"
-          one: "Нові ({{count}})"
-          other: "Нові"
       posted:
         title: "Мої дописи"
         help: "теми, в які Ви дописували"
       bookmarks:
         title: "Закладки"
       category:
-        title:
-          zero: "{{categoryName}}"
-          one: "{{categoryName}} ({{count}})"
-          other: "{{categoryName}}"
         help: "Останні теми в категорії {{categoryName}}"
       top:
         title: "Top"
@@ -1147,9 +1126,8 @@ uk:
           love:
             description: "Колір кнопки \"Подобається\"."
       email:
-        title: "Електронна пошта"
         settings: "Налаштування"
-        all: "All"
+        preview_digest: "Стислий виклад новин"
         sent: "Sent"
         skipped: "Skipped"
         sent_at: "Надіслано"
@@ -1161,7 +1139,6 @@ uk:
         send_test: "Надіслати Тестовий Email"
         sent_test: "надіслано!"
         delivery_method: "Спосіб доставки"
-        preview_digest: "Стислий виклад новин"
         refresh: "Оновити"
         format: "Формат"
         html: "html"
@@ -1326,7 +1303,6 @@ uk:
         trust_level_3_requirements: "Вимоги для Рівня довіри 3"
         tl3_requirements:
           title: "Вимоги для Рівня довіри 3"
-          table_title: "Протягом останніх 100 днів:"
           value_heading: "Значення"
           requirement_heading: "Вимога"
           visits: "Відвідини"

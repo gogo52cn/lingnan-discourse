@@ -5,6 +5,8 @@ import Topic from 'discourse/models/topic';
 import Quote from 'discourse/lib/quote';
 import { popupAjaxError } from 'discourse/lib/ajax-error';
 import computed from 'ember-addons/ember-computed-decorators';
+import Composer from 'discourse/models/composer';
+import DiscourseURL from 'discourse/lib/url';
 
 export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
   needs: ['header', 'modal', 'composer', 'quote-button', 'topic-progress', 'application'],
@@ -16,8 +18,8 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
   queryParams: ['filter', 'username_filters', 'show_deleted'],
   loadedAllPosts: Em.computed.or('model.postStream.loadedAllPosts', 'model.postStream.loadingLastPost'),
   enteredAt: null,
-  firstPostExpanded: false,
   retrying: false,
+  firstPostExpanded: false,
   adminMenuVisible: false,
 
   showRecover: Em.computed.and('model.deleted', 'model.details.can_recover'),
@@ -32,6 +34,17 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
       this.send('refreshTitle');
     }
   }.observes('model.title', 'category'),
+
+  @computed('model.postStream.posts')
+  postsToRender() {
+    return this.capabilities.isAndroid ? this.get('model.postStream.posts')
+                                       : this.get('model.postStream.postsWithPlaceholders');
+  },
+
+  @computed('model.postStream.loadingFilter')
+  androidLoading(loading) {
+    return this.capabilities.isAndroid && loading;
+  },
 
   @computed('model.postStream.summary')
   show_deleted: {
@@ -77,6 +90,16 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
     this.set('selectedReplies', []);
   }.on('init'),
 
+  showCategoryChooser: Ember.computed.not("model.isPrivateMessage"),
+
+  gotoInbox(name) {
+    var url = '/users/' + this.get('currentUser.username_lower') + '/messages';
+    if (name) {
+      url = url + '/group/' + name;
+    }
+    DiscourseURL.routeTo(url);
+  },
+
   actions: {
     showTopicAdminMenu() {
       this.set('adminMenuVisible', true);
@@ -90,6 +113,21 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
       this.deleteTopic();
     },
 
+
+    archiveMessage() {
+      const topic = this.get('model');
+      topic.archiveMessage().then(()=>{
+        this.gotoInbox(topic.get("inboxGroupName"));
+      });
+    },
+
+    moveToInbox() {
+      const topic = this.get('model');
+      topic.moveToInbox().then(()=>{
+        this.gotoInbox(topic.get("inboxGroupName"));
+      });
+    },
+
     // Post related methods
     replyToPost(post) {
       const composerController = this.get('controllers.composer'),
@@ -100,14 +138,14 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
       quoteController.set('buffer', '');
 
       if (composerController.get('content.topic.id') === topic.get('id') &&
-          composerController.get('content.action') === Discourse.Composer.REPLY) {
+          composerController.get('content.action') === Composer.REPLY) {
         composerController.set('content.post', post);
-        composerController.set('content.composeState', Discourse.Composer.OPEN);
-        composerController.appendText(quotedText);
+        composerController.set('content.composeState', Composer.OPEN);
+        this.appEvents.trigger('composer:insert-text', quotedText.trim());
       } else {
 
         const opts = {
-          action: Discourse.Composer.REPLY,
+          action: Composer.REPLY,
           draftKey: topic.get('draft_key'),
           draftSequence: topic.get('draft_sequence')
         };
@@ -140,6 +178,9 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
       if (post.get('post_number') === 1) {
         this.deleteTopic();
         return;
+      } else if (!post.can_delete) {
+        // check if current user can delete post
+        return false;
       }
 
       const user = Discourse.User.current(),
@@ -181,11 +222,16 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
         return bootbox.alert(I18n.t('post.controls.edit_anonymous'));
       }
 
+      // check if current user can edit post
+      if (!post.can_edit) {
+        return false;
+      }
+
       const composer = this.get('controllers.composer'),
             composerModel = composer.get('model'),
             opts = {
               post: post,
-              action: Discourse.Composer.EDIT,
+              action: Composer.EDIT,
               draftKey: post.get('topic.draft_key'),
               draftSequence: post.get('topic.draft_sequence')
             };
@@ -389,15 +435,15 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
       quoteController.deselectText();
 
       composerController.open({
-        action: Discourse.Composer.CREATE_TOPIC,
-        draftKey: Discourse.Composer.REPLY_AS_NEW_TOPIC_KEY,
+        action: Composer.CREATE_TOPIC,
+        draftKey: Composer.REPLY_AS_NEW_TOPIC_KEY,
         categoryId: this.get('category.id')
       }).then(() => {
-        return Em.isEmpty(quotedText) ? Discourse.Post.loadQuote(post.get('id')) : quotedText;
+        return Em.isEmpty(quotedText) ? "" : quotedText;
       }).then(q => {
-        const postUrl = `${location.protocol}//${location.host}${post.get('url')}`,
-              postLink = `[${Handlebars.escapeExpression(self.get('model.title'))}](${postUrl})`;
-        composerController.appendText(`${I18n.t("post.continue_discussion", { postLink })}\n\n${q}`);
+        const postUrl = `${location.protocol}//${location.host}${post.get('url')}`;
+        const postLink = `[${Handlebars.escapeExpression(self.get('model.title'))}](${postUrl})`;
+        composerController.get('model').appendText(`${I18n.t("post.continue_discussion", { postLink })}\n\n${q}`);
       });
     },
 
@@ -586,6 +632,14 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
           }
           return;
         }
+        case "move_to_inbox": {
+          topic.set("message_archived",false);
+          return;
+        }
+        case "archived": {
+          topic.set("message_archived",true);
+          return;
+        }
         default: {
           Em.Logger.warn("unknown topic bus message type", data);
         }
@@ -644,7 +698,9 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
         topic.set("last_read_post_number", max);
       }
 
-      if (this.siteSettings.automatically_unpin_topics && this.currentUser) {
+      if (this.siteSettings.automatically_unpin_topics &&
+          this.currentUser &&
+          this.currentUser.automatically_unpin_topics) {
         // automatically unpin topics when the user reaches the bottom
         if (topic.get("pinned") && max >= topic.get("highest_post_number")) {
           Em.run.next(() => topic.clearPin());
@@ -657,8 +713,8 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
   topVisibleChanged(post) {
     if (!post) { return; }
 
-    const postStream = this.get('model.postStream'),
-          firstLoadedPost = postStream.get('firstLoadedPost');
+    const postStream = this.get('model.postStream');
+    const firstLoadedPost = postStream.get('posts.firstObject');
 
     this.set('model.currentPost', post.get('post_number'));
 
@@ -669,15 +725,17 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
       // trigger a scroll after a promise resolves in a controller? We need
       // to do this to preserve upwards infinte scrolling.
       const $body = $('body');
-      let $elem = $('#post-cloak-' + post.get('post_number'));
-      const distToElement = $body.scrollTop() - $elem.position().top;
+      const elemId = `#post_${post.get('post_number')}`;
+      const $elem = $(elemId).closest('.post-cloak');
+      const elemPos = $elem.position();
+      const distToElement = elemPos ? $body.scrollTop() - elemPos.top : 0;
 
       postStream.prependMore().then(function() {
         Em.run.next(function () {
-          $elem = $('#post-cloak-' + post.get('post_number'));
+          const $refreshedElem = $(elemId).closest('.post-cloak');
 
           // Quickly going back might mean the element is destroyed
-          const position = $elem.position();
+          const position = $refreshedElem.position();
           if (position && position.top) {
             $('html, body').scrollTop(position.top + distToElement);
           }
@@ -695,8 +753,8 @@ export default Ember.Controller.extend(SelectedPostsCount, BufferedContent, {
   bottomVisibleChanged(post) {
     if (!post) { return; }
 
-    const postStream = this.get('model.postStream'),
-        lastLoadedPost = postStream.get('lastLoadedPost');
+    const postStream = this.get('model.postStream');
+    const lastLoadedPost = postStream.get('posts.lastObject');
 
     this.set('controllers.topic-progress.progressPosition', postStream.progressIndexOfPost(post));
 
