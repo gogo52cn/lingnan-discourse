@@ -21,7 +21,7 @@ export default Ember.Component.extend({
           params.push(model);
         }
 
-        return router.router.generate.apply(router.router, params);
+        return Discourse.getURL(router.router.generate.apply(router.router, params));
       }
     }
 
@@ -57,8 +57,12 @@ export default Ember.Component.extend({
     if (label) {
       if (icon) { buffer.push(" "); }
 
-      const count = this.get('count');
-      buffer.push(I18n.t(label, { count }));
+      if (this.get('translateLabel') === "false") {
+        buffer.push(label);
+      } else {
+        const count = this.get('count');
+        buffer.push(I18n.t(label, { count }));
+      }
     }
   }
 

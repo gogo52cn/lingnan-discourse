@@ -14,8 +14,10 @@ module Onebox
         if other.kind_of?(URI)
           uri = other
           begin
-            route = Rails.application.routes.recognize_path(uri.path)
+            route = Rails.application.routes.recognize_path(uri.path.sub(Discourse.base_uri, ""))
             case route[:controller]
+            when 'uploads'
+              super
             when 'topics'
               # super will use matches_regexp to match the domain name
               super
@@ -32,12 +34,22 @@ module Onebox
 
       def to_html
         uri = URI::parse(@url)
-        route = Rails.application.routes.recognize_path(uri.path)
+        route = Rails.application.routes.recognize_path(uri.path.sub(Discourse.base_uri, ""))
         url = @url.sub(/[&?]source_topic_id=(\d+)/, "")
         source_topic_id = $1.to_i
 
         # Figure out what kind of onebox to show based on the URL
         case route[:controller]
+        when 'uploads'
+
+          url.gsub!("http:", "https:") if SiteSetting.use_https
+          if File.extname(uri.path) =~ /^.(mov|mp4|webm|ogv)$/
+            return "<video width='100%' height='100%' controls><source src='#{url}'><a href='#{url}'>#{url}</a></video>"
+          elsif File.extname(uri.path) =~ /^.(mp3|ogg|wav)$/
+            return "<audio controls><source src='#{url}'><a href='#{url}'>#{url}</a></audio>"
+          else
+            return false
+          end
         when 'topics'
 
           linked = "<a href='#{url}'>#{url}</a>"
@@ -51,7 +63,7 @@ module Onebox
             topic = post.topic
             slug = Slug.for(topic.title)
 
-            excerpt = post.excerpt(SiteSetting.post_onebox_maxlength)
+            excerpt = post.excerpt(SiteSetting.post_onebox_maxlength, { keep_emoji_codes: true })
             excerpt.gsub!("\n"," ")
             # hack to make it render for now
             excerpt.gsub!("[/quote]", "[quote]")

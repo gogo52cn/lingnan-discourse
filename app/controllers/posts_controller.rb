@@ -79,7 +79,7 @@ class PostsController < ApplicationController
   def raw_email
     post = Post.find(params[:id].to_i)
     guardian.ensure_can_view_raw_email!(post)
-    render json: {raw_email: post.raw_email}
+    render json: { raw_email: post.raw_email }
   end
 
   def short_link
@@ -95,14 +95,6 @@ class PostsController < ApplicationController
   end
 
   def create
-
-    if !is_api? && current_user.blocked?
-
-      # error has parity with what user would get if they posted when blocked
-      # and it went through post creator
-      render json: {errors: [I18n.t("topic_not_found")]}, status: 422
-      return
-    end
 
     @manager_params = create_params
     @manager_params[:first_post_checks] = !is_api?
@@ -130,6 +122,9 @@ class PostsController < ApplicationController
     post = Post.where(id: params[:id])
     post = post.with_deleted if guardian.is_staff?
     post = post.first
+
+    raise Discourse::NotFound if post.blank?
+
     post.image_sizes = params[:image_sizes] if params[:image_sizes].present?
 
     if too_late_to(:edit, post)
@@ -155,15 +150,18 @@ class PostsController < ApplicationController
       opts[:skip_validations] = true
     end
 
-    revisor = PostRevisor.new(post)
+    topic = post.topic
+    topic = Topic.with_deleted.find(post.topic_id) if guardian.is_staff?
+
+    revisor = PostRevisor.new(post, topic)
     revisor.revise!(current_user, changes, opts)
 
     return render_json_error(post) if post.errors.present?
-    return render_json_error(post.topic) if post.topic.errors.present?
+    return render_json_error(topic) if topic.errors.present?
 
     post_serializer = PostSerializer.new(post, scope: guardian, root: false)
-    post_serializer.draft_sequence = DraftSequence.current(current_user, post.topic.draft_key)
-    link_counts = TopicLink.counts_for(guardian,post.topic, [post])
+    post_serializer.draft_sequence = DraftSequence.current(current_user, topic.draft_key)
+    link_counts = TopicLink.counts_for(guardian, topic, [post])
     post_serializer.single_post_link_counts = link_counts[post.id] if link_counts.present?
 
     result = { post: post_serializer.as_json }
@@ -299,9 +297,9 @@ class PostsController < ApplicationController
   end
 
   def wiki
-    guardian.ensure_can_wiki!
-
     post = find_post_from_params
+    guardian.ensure_can_wiki!(post)
+
     post.revise(current_user, { wiki: params[:wiki] })
 
     render nothing: true
@@ -500,6 +498,14 @@ class PostsController < ApplicationController
     result[:ip_address] = request.remote_ip
     result[:user_agent] = request.user_agent
     result[:referrer] = request.env["HTTP_REFERER"]
+
+    if usernames = result[:target_usernames]
+      usernames = usernames.split(",")
+      groups = Group.mentionable(current_user).where('name in (?)', usernames).pluck('name')
+      usernames -= groups
+      result[:target_usernames] = usernames.join(",")
+      result[:target_group_names] = groups.join(",")
+    end
 
     result
   end

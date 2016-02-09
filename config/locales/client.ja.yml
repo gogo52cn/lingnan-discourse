@@ -104,6 +104,7 @@ ja:
     admin_title: "管理者"
     flags_title: "フラグ"
     show_more: "もっと見る"
+    show_help: "オプション"
     links: "リンク"
     links_lowercase:
       other: "リンク集"
@@ -175,6 +176,7 @@ ja:
     saved: "保存しました"
     upload: "アップロード"
     uploading: "アップロード中..."
+    uploading_filename: "アップロード中 {{filename}}..."
     uploaded: "アップロードしました"
     enable: "有効にする"
     disable: "無効にする"
@@ -244,13 +246,17 @@ ja:
       total_rows:
         other: "%{count} 人のユーザ"
     groups:
+      empty:
+        posts: "このグループのメンバーによる投稿はありません。"
+      add: "追加"
+      selector_placeholder: "メンバー追加"
+      owner: "所有者"
       visible: "このグループは全てのユーザに表示されています。"
       title:
         other: "グループ"
       members: "メンバー"
       posts: "ポスト"
       alias_levels:
-        title: "このグループを仮名として使えるユーザ"
         nobody: "無し"
         only_admins: "管理者のみ"
         mods_and_admins: "管理者とモデレータのみ"
@@ -265,7 +271,6 @@ ja:
       '6': "レスポンス数"
       '7': "タグ付け"
       '9': "引用"
-      '10': "お気に入り"
       '11': "編集"
       '12': "アイテム送信"
       '13': "インボックス"
@@ -275,6 +280,8 @@ ja:
       all_subcategories: "全てのサブカテゴリ"
       no_subcategory: "サブカテゴリなし"
       category: "カテゴリ"
+      reorder:
+        title: "カテゴリを並び替える"
       posts: "ポスト"
       topics: "トピック"
       latest: "最新ポスト"
@@ -370,8 +377,6 @@ ja:
         warnings_received: "注意"
       messages:
         all: "すべて"
-        mine: "受信トレイ"
-        unread: "未読"
       change_password:
         success: "(メールを送信しました)"
         in_progress: "(メールを送信中)"
@@ -416,10 +421,6 @@ ja:
         ok: "確認用メールを送信します"
         invalid: "正しいメールアドレスを入力してください"
         authenticated: "あなたのメールアドレスは {{provider}} によって認証されています"
-        frequency:
-          zero: "未読メールがあった場合、すぐにメールを送信します"
-          one: "直前にページを閲覧していなかった場合だけメールを送信します"
-          other: "{{count}} 分間ページを閲覧していなかった場合だけメールを送信します"
       name:
         title: "名前"
         instructions: "フルネーム(任意)"
@@ -548,7 +549,6 @@ ja:
     logout: "ログアウトしました"
     refresh: "Refresh"
     read_only_mode:
-      enabled: "読み取り専用モードが有効になっています。サイトをブラウズすることは引き続き出来ますが、機能は動作しません。"
       login_disabled: "読み取り専用モードにされています。ログインできません。"
     learn_more: "より詳しく..."
     year: '年'
@@ -565,6 +565,8 @@ ja:
     last_reply_lowercase: 最新の回答
     replies_lowercase:
       other: 回答
+    signup_cta:
+      sign_up: "新しいアカウントを作成"
     summary:
       enabled_description: "トピックのまとめを表示されています。"
       description: "<b>{{count}}</b> 返信があります。"
@@ -645,7 +647,6 @@ ja:
     twitter: "Twitter"
     emoji_one: "Emoji One"
     composer:
-      emoji: "Emoji :smile:"
       add_warning: "これは公式の警告です。"
       posting_not_on_topic: "回答したいトピックはどれですか?"
       saving_draft_tip: "保存中..."
@@ -767,7 +768,6 @@ ja:
       bulk:
         reset_read: "未読に設定"
         delete: "トピックを削除"
-        dismiss_topics: "既読に設定"
         dismiss_new: "既読に設定"
         toggle: "選択したトピックを切り替え"
         actions: "操作"
@@ -939,25 +939,14 @@ ja:
         unpin: "{{categoryLink}} カテゴリのトップからトピックを削除"
         unpin_until: "{{categoryLink}} カテゴリのトップからこのトピックを削除するか、<strong>%{until}</strong> まで待つ。"
         pin_note: "ユーザはトピックを個別にピン留め解除することができます"
-        already_pinned:
-          zero: "{{categoryLink}}にはピン留めされたトピックはありません"
-          one: "{{categoryLink}}内のトピックは現在<strong  class='badge badge-notification unread'>1</strong>個ピン留めされています。"
-          other: "{{categoryLink}}内のトピックは現在<strong  class='badge badge-notification unread'>{{count}}</strong>個ピン留めされています。"
         pin_globally: "このトピックをすべてのトピックリストのトップに表示する"
         confirm_pin_globally: "既に{{count}} 個ピン留めしています。　多すぎるピン留めは新規ユーザと匿名ユーザの負担になる場合があります。ピン留めを続けますか？"
         unpin_globally: "トピック一覧のトップからこのトピックを削除します"
         unpin_globally_until: "このトピックをすべてのトピックリストのトップから削除するか、<strong>%{until}</strong> まで待つ。"
         global_pin_note: "ユーザはトピックを個別にピン留め解除することができます"
-        already_pinned_globally:
-          zero: "現在ピン留めされていません"
-          one: "現在<strong class='badge badge-notification unread'>1</strong>個ピン留めされています"
-          other: "現在<strong class='badge badge-notification unread'>{{count}}</strong>個ピン留めされています"
         make_banner: "このトピックを全てのページのバナーに表示します"
         remove_banner: "全てのページのバナーを削除します"
         banner_note: "ユーザはバナーを閉じることができます。常に１つのトピックだけがバナー表示されます"
-        already_banner:
-          zero: "バナートピックはありません"
-          one: "これら<strong class='badge badge-notification unread'>が</strong>現在のバナートピックです。"
       inviting: "招待中..."
       automatically_add_to_groups_optional: "この招待によって、リストされたグループに参加することができます。"
       automatically_add_to_groups_required: "この招待によって、リストされたグループに参加することができます。"
@@ -1047,10 +1036,6 @@ ja:
         other: "{{count}} 個のいいね！"
       has_likes_title:
         other: "{{count}}人のユーザがこの回答に「いいね！」しました"
-      has_likes_title_you:
-        zero: "この投稿に「いいね！」する"
-        one: "あなたと1人がこの回答に「いいね！」しました"
-        other: "あなたと他{{count}}人がこの回答に「いいね！」しました"
       errors:
         create: "申し訳ありませんが、ポスト作成中にエラーが発生しました。もう一度やり直してください。"
         edit: "申し訳ありませんが、ポスト編集中にエラーが発生しました。もう一度やり直してください。"
@@ -1068,8 +1053,6 @@ ja:
         no_value: "いいえ"
         yes_value: "はい"
       via_email: "メールで投稿されました。"
-      wiki:
-        about: "この投稿は「Wiki」である。ベーシックユーザが編集できます。"
       archetypes:
         save: '保存オプション'
       controls:
@@ -1170,10 +1153,6 @@ ja:
             other: "{{count}}人のユーザが「いいね！」しました"
           vote:
             other: "{{count}}人のユーザがこのポストに投票しました"
-      edits:
-        one: 1回編集
-        other: "{{count}}回編集"
-        zero: 編集なし
       delete:
         confirm:
           other: "本当にこれらのポストを削除しますか?"
@@ -1344,10 +1323,7 @@ ja:
       with_topics: "%{filter} トピック"
       with_category: "%{filter} %{category} トピック"
       latest:
-        title:
-          zero: "最新ポスト"
-          one: "最新ポスト (1)"
-          other: "最新ポスト ({{count}})"
+        title: "最新"
         help: "最新のトピック"
       hot:
         title: "ホット"
@@ -1363,23 +1339,19 @@ ja:
         title_in: "カテゴリ - {{categoryName}}"
         help: "カテゴリ毎に整理されたトピックを表示"
       unread:
-        title:
-          zero: "未読"
-          one: "未読 (1)"
+        title: "未読"
+        title_with_count:
           other: "未読 ({{count}})"
         help: "未読ポストのあるトピック"
         lower_title_with_count:
-          one: "１未読"
           other: "{{count}} 未読"
       new:
         lower_title_with_count:
-          one: "１件"
           other: "{{count}}件"
         lower_title: "新着"
-        title:
-          zero: "新規"
-          one: "新規 (1)"
-          other: "新規 ({{count}})"
+        title: "新規"
+        title_with_count:
+          other: "最新 ({{count}})"
         help: "最近投稿されたトピック"
       posted:
         title: "あなたのポスト"
@@ -1388,9 +1360,8 @@ ja:
         title: "ブックマーク"
         help: "ブックマークしたトピック"
       category:
-        title:
-          zero: "{{categoryName}}"
-          one: "{{categoryName}} (1)"
+        title: "{{categoryName}}"
+        title_with_count:
           other: "{{categoryName}} ({{count}})"
         help: "{{categoryName}} カテゴリの最新トピック"
       top:
@@ -1410,7 +1381,7 @@ ja:
           title: "毎日"
         all_time: "今まで"
         this_year: "年"
-        this_quarter: "４分の１"
+        this_quarter: "季刊"
         this_month: "月"
         this_week: "週"
         today: "本日"
@@ -1437,7 +1408,7 @@ ja:
         stale_data: "最近アップデートの確認が正しく動作していません。sidekiq が起動していることを確認してください。"
         version_check_pending: "まるでアップデート直後のようです。素晴らしい！"
         installed_version: "Installed"
-        latest_version: "Latest"
+        latest_version: "最新"
         problems_found: "Discourse のインストールにいくつか問題が発見されました:"
         last_checked: "最終チェック"
         refresh_problems: "更新"
@@ -1730,9 +1701,8 @@ ja:
             name: 'wiki'
             description: "Wiki投稿の背景に使用する基本色"
       email:
-        title: "メール"
         settings: "設定"
-        all: "全て"
+        preview_digest: "ダイジェストのプレビュー"
         sending_test: "テストメールを送信中..."
         error: "<b>ERROR</b> - %{server_error}"
         test_error: "テストメールを送れませんでした。メール設定、またはホストをメールコネクションをブロックされていないようを確認してください。"
@@ -1747,7 +1717,6 @@ ja:
         send_test: "テストメールを送る"
         sent_test: "送信完了!"
         delivery_method: "送信方法"
-        preview_digest: "ダイジェストのプレビュー"
         refresh: "更新"
         format: "フォーマット"
         html: "html"
@@ -1813,6 +1782,7 @@ ja:
             impersonate: "なりすまし"
             anonymize_user: "匿名ユーザ"
             roll_up: "IPブロックをロールアップ"
+            delete_category: "カテゴリを削除する"
         screened_emails:
           title: "ブロック対象アドレス"
           description: "新規アカウント作成時、次のメールアドレスからの登録をブロックする。"
@@ -1877,9 +1847,6 @@ ja:
           pending: '保留中のユーザ'
           newuser: 'トラストレベル0のユーザ (新規ユーザ)'
           basic: 'トラストレベル1のユーザ (ベーシックユーザ)'
-          regular: 'トラストレベル 2(メンバー)のユーザ'
-          leader: 'トラストレベル3(レギュラー)のユーザ'
-          elder: 'トラストレベル4(リーダー)のユーザ'
           staff: "スタッフ"
           admins: '管理者ユーザ'
           moderators: 'モデレータ'
@@ -1984,7 +1951,7 @@ ja:
         unlock_trust_level: "トラストレベルをアンロック"
         tl3_requirements:
           title: "トラストレベル3の条件"
-          table_title: "過去100日に："
+          table_title: "過去%{time_period} 日間に"
           value_heading: "値"
           requirement_heading: "条件"
           visits: "訪問"
@@ -2045,8 +2012,8 @@ ja:
           confirm: '確認'
           dropdown: "ドロップダウン"
       site_text:
-        none: "コンテンツの種類を選択してください"
         title: 'テキストコンテンツ'
+        edit: '編集'
       site_settings:
         show_overriden: '上書き部分のみ表示'
         title: '設定'
@@ -2133,10 +2100,6 @@ ja:
           bad_count_warning:
             header: "WARNING!"
             text: "There are missing grant samples. This happens when the badge query returns user IDs or post IDs that do not exist. This may cause unexpected results later on - please double-check your query."
-          grant_count:
-            zero: "付与されたバッジはありません"
-            one: "<b>1</b> 個のバッジが付与されています"
-            other: "<b>%{count}</b> 個のバッジが付与されています"
           sample: "サンプル："
           grant:
             with: <span class="username">%{username}</span>
@@ -2150,6 +2113,8 @@ ja:
         name: "名前"
         image: "画像"
         delete_confirm: "Are you sure you want to delete the :%{name}: emoji?"
+      embedding:
+        edit: "編集"
       permalink:
         title: "パーマリンク"
         url: "URL"

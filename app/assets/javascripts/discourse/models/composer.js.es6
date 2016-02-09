@@ -67,15 +67,16 @@ const Composer = RestModel.extend({
   creatingPrivateMessage: Em.computed.equal('action', PRIVATE_MESSAGE),
   notCreatingPrivateMessage: Em.computed.not('creatingPrivateMessage'),
 
-  showCategoryChooser: function(){
+  @computed("privateMessage", "archetype.hasOptions")
+  showCategoryChooser(isPrivateMessage, hasOptions) {
     const manyCategories = Discourse.Category.list().length > 1;
-    const hasOptions = this.get('archetype.hasOptions');
-    return !this.get('privateMessage') && (hasOptions || manyCategories);
-  }.property('privateMessage'),
+    return !isPrivateMessage && (hasOptions || manyCategories);
+  },
 
-  privateMessage: function(){
-    return this.get('creatingPrivateMessage') || this.get('topic.archetype') === 'private_message';
-  }.property('creatingPrivateMessage', 'topic'),
+  @computed("creatingPrivateMessage", "topic")
+  privateMessage(creatingPrivateMessage, topic) {
+    return creatingPrivateMessage || (topic && topic.get('archetype') === 'private_message');
+  },
 
   topicFirstPost: Em.computed.or('creatingTopic', 'editingFirstPost'),
 
@@ -138,7 +139,7 @@ const Composer = RestModel.extend({
       const postNumber = this.get('post.post_number');
       postLink = "<a href='" + (topic.get('url')) + "/" + postNumber + "'>" +
         I18n.t("post.post_number", { number: postNumber }) + "</a>";
-      topicLink = "<a href='" + (topic.get('url')) + "'> " + (Handlebars.Utils.escapeExpression(topic.get('title'))) + "</a>";
+      topicLink = "<a href='" + (topic.get('url')) + "'> " + Discourse.Utilities.escapeExpression(topic.get('title')) + "</a>";
       usernameLink = "<a href='" + (topic.get('url')) + "/" + postNumber + "'>" + this.get('post.username') + "</a>";
     }
 

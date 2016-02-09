@@ -16,7 +16,8 @@ class UserUpdater
     :dynamic_favicon,
     :mailing_list_mode,
     :disable_jump_reply,
-    :edit_history_public
+    :edit_history_public,
+    :automatically_unpin_topics,
   ]
 
   def initialize(actor, user)
@@ -103,6 +104,7 @@ class UserUpdater
   attr_reader :user, :guardian
 
   def format_url(website)
+    return nil if website.blank?
     website =~ /^http/ ? website : "http://#{website}"
   end
 end

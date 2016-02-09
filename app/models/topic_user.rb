@@ -17,21 +17,22 @@ class TopicUser < ActiveRecord::Base
 
     # Enums
     def notification_levels
-      @notification_levels ||= Enum.new(:muted, :regular, :tracking, :watching, start: 0)
+      @notification_levels ||= Enum.new(muted: 0,
+                                        regular: 1,
+                                        tracking: 2,
+                                        watching: 3)
     end
 
     def notification_reasons
-      @notification_reasons ||= Enum.new(
-        :created_topic,
-        :user_changed,
-        :user_interacted,
-        :created_post,
-        :auto_watch,
-        :auto_watch_category,
-        :auto_mute_category,
-        :auto_track_category,
-        :plugin_changed
-      )
+      @notification_reasons ||= Enum.new(created_topic: 1,
+                                         user_changed: 2,
+                                         user_interacted: 3,
+                                         created_post: 4,
+                                         auto_watch: 5,
+                                         auto_watch_category: 6,
+                                         auto_mute_category: 7,
+                                         auto_track_category: 8,
+                                         plugin_changed: 9)
     end
 
     def auto_track(user_id, topic_id, reason)
@@ -46,6 +47,13 @@ class TopicUser < ActiveRecord::Base
           notifications_reason_id: reason
         }, user_ids: [user_id])
       end
+    end
+
+    def auto_watch(user_id, topic_id)
+      topic_user = TopicUser.find_or_initialize_by(user_id: user_id, topic_id: topic_id)
+      topic_user.notification_level = notification_levels[:watching]
+      topic_user.notifications_reason_id = notification_reasons[:auto_watch]
+      topic_user.save
     end
 
     # Find the information specific to a user in a forum topic
@@ -96,7 +104,7 @@ class TopicUser < ActiveRecord::Base
 
         if rows == 0
           now = DateTime.now
-          auto_track_after = User.select(:auto_track_topics_after_msecs).find_by(id: user_id).auto_track_topics_after_msecs
+          auto_track_after = User.select(:auto_track_topics_after_msecs).find_by(id: user_id).try(:auto_track_topics_after_msecs)
           auto_track_after ||= SiteSetting.default_other_auto_track_topics_after_msecs
 
           if auto_track_after >= 0 && auto_track_after <= (attrs[:total_msecs_viewed].to_i || 0)

@@ -110,7 +110,7 @@ class ApplicationController < ActionController::Base
     if (request.format && request.format.json?) || (request.xhr?)
       # HACK: do not use render_json_error for topics#show
       if request.params[:controller] == 'topics' && request.params[:action] == 'show'
-        return render status: status_code, layout: false, text: (status_code == 404) ? build_not_found_page(status_code) : I18n.t(type)
+        return render status: status_code, layout: false, text: (status_code == 404 || status_code == 410) ? build_not_found_page(status_code) : I18n.t(type)
       end
 
       render_json_error I18n.t(type), type: type, status: status_code
@@ -138,13 +138,8 @@ class ApplicationController < ActionController::Base
   end
 
   def set_locale
-    I18n.locale = if current_user
-                    current_user.effective_locale
-                  else
-                    SiteSetting.default_locale
-                  end
-
-    I18n.fallbacks.ensure_loaded!
+    I18n.locale = current_user.try(:effective_locale) || SiteSetting.default_locale
+    I18n.ensure_all_loaded!
   end
 
   def store_preloaded(key, json)
@@ -234,8 +229,9 @@ class ApplicationController < ActionController::Base
       opts.each do |k, v|
         obj[k] = v if k.to_s.start_with?("refresh_")
       end
-    end
 
+      obj['extras'] = opts[:extras] if opts[:extras]
+    end
 
     render json: MultiJson.dump(obj), status: opts[:status] || 200
   end
@@ -255,8 +251,8 @@ class ApplicationController < ActionController::Base
     user = if params[:username]
       username_lower = params[:username].downcase
       username_lower.gsub!(/\.json$/, '')
-      find_opts = {username_lower: username_lower}
-      find_opts[:active] = true unless opts[:include_inactive]
+      find_opts = { username_lower: username_lower }
+      find_opts[:active] = true unless opts[:include_inactive] || current_user.try(:staff?)
       User.find_by(find_opts)
     elsif params[:external_id]
       external_id = params[:external_id].gsub(/\.json$/, '')
@@ -293,6 +289,7 @@ class ApplicationController < ActionController::Base
       store_preloaded("customHTML", custom_html_json)
       store_preloaded("banner", banner_json)
       store_preloaded("customEmoji", custom_emoji)
+      store_preloaded("translationOverrides", I18n.client_overrides_json(I18n.locale))
     end
 
     def preload_current_user_data
