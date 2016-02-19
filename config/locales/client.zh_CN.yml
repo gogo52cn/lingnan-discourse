@@ -482,13 +482,13 @@ zh_CN:
         frequency:
           other: "我们只会在你最近 {{count}} 分钟内没有访问时才会发送电子邮件给你。"
       name:
-        title: "昵称"
-        instructions: "你的昵称（可选）"
+        title: "中文全名"
+        instructions: "你的全名（可选）"
         instructions_required: "你的全名"
-        too_short: "你设置的昵称太短了"
-        ok: "你的昵称符合要求"
+        too_short: "你设置的全名太短了"
+        ok: "你的全名符合要求"
       username:
-        title: "用户名"
+        title: "登录名(英文字母)"
         instructions: "唯一，没有空格，简短"
         short_instructions: "其他人可以用 @{{username}} 来提及你"
         available: "你的用户名可用"
