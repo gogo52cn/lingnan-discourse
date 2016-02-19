@@ -287,6 +287,9 @@ class UsersController < ApplicationController
       user.staged = false
     else
       user = User.new(user_params)
+      if session[:sso_destination_url_after_signup]
+        user.sso_destination_url_after_signup = session[:sso_destination_url_after_signup]
+      end
     end
 
     # Handle custom fields
