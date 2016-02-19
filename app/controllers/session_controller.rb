@@ -277,11 +277,8 @@ class SessionController < ApplicationController
     if payload = session.delete(:sso_payload)
       sso_provider(payload)
     elsif sso_redirect_url = user.sso_destination_url_after_signup
-      if request.xhr?
-        cookies[:sso_destination_url] = sso.to_url(sso.return_sso_url)
-      else     
+      user.update(sso_destination_url_after_signup: nil)              
       redirect_to sso_redirect_url+"?sso_status=signup_finished"
-      user.update(sso_destination_url_after_signup: nil) 
     end
     render_serialized(user, UserSerializer)
   end
