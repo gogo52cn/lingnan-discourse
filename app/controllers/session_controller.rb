@@ -37,6 +37,11 @@ class SessionController < ApplicationController
         sso.external_id = current_user.id.to_s
         sso.admin = current_user.admin?
         sso.moderator = current_user.moderator?
+        sso.avatar_url = if current_user.user_avatar.custom_upload_id
+                                    request.base_url+Upload.find(current_user.user_avatar.custom_upload_id).thumbnail.url
+                                  else
+                                    nil
+                                  end
         if request.xhr?
           cookies[:sso_destination_url] = sso.to_url(sso.return_sso_url)
         else

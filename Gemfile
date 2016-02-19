@@ -1,6 +1,6 @@
-source 'https://rubygems.org'
+#source 'https://rubygems.org'
 # if there is a super emergency and rubygems is playing up, try
-#source 'http://production.cf.rubygems.org'
+source 'http://production.cf.rubygems.org'
 
 def rails_master?
   ENV["RAILS_MASTER"] == '1'
@@ -64,7 +64,10 @@ gem 'aws-sdk', require: false
 gem 'excon', require: false
 gem 'unf', require: false
 
+#gem 'email_reply_trimmer', '0.0.6'
+
 gem 'email_reply_trimmer', '0.0.6'
+
 
 # note: for image_optim to correctly work you need to follow
 # https://github.com/toy/image_optim
