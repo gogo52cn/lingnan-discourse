@@ -31,7 +31,7 @@ class SessionController < ApplicationController
     if SiteSetting.enable_sso_provider
       sso = SingleSignOn.parse(payload, SiteSetting.sso_secret)
       if current_user
-        sso.id = current_user.id
+        #sso.id = current_user.id
         sso.name = current_user.name
         sso.username = current_user.username
         sso.email = current_user.email
