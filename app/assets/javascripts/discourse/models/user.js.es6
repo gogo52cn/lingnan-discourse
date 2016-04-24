@@ -90,7 +90,7 @@ const User = RestModel.extend({
 
   },
 
-  adminPath: url('username_lower', "/admin/users/%@"),
+  adminPath: url('id', 'username_lower', "/admin/users/%@1/%@2"),
 
   mutedTopicsPath: url('/latest?state=muted'),
 
@@ -141,30 +141,38 @@ const User = RestModel.extend({
 
   save() {
     const data = this.getProperties(
-            'auto_track_topics_after_msecs',
             'bio_raw',
             'website',
             'location',
             'name',
             'locale',
-            'email_digests',
-            'email_direct',
-            'email_always',
-            'email_private_messages',
-            'dynamic_favicon',
-            'digest_after_days',
-            'new_topic_duration_minutes',
-            'external_links_in_new_tab',
-            'mailing_list_mode',
-            'enable_quoting',
-            'disable_jump_reply',
             'custom_fields',
             'user_fields',
             'muted_usernames',
             'profile_background',
-            'card_background',
-            'automatically_unpin_topics'
+            'card_background'
           );
+
+    [       'email_always',
+            'mailing_list_mode',
+            'external_links_in_new_tab',
+            'email_digests',
+            'email_direct',
+            'email_in_reply_to',
+            'email_private_messages',
+            'email_previous_replies',
+            'dynamic_favicon',
+            'enable_quoting',
+            'disable_jump_reply',
+            'automatically_unpin_topics',
+            'digest_after_minutes',
+            'new_topic_duration_minutes',
+            'auto_track_topics_after_msecs',
+            'like_notification_frequency',
+            'include_tl0_in_digests'
+    ].forEach(s => {
+      data[s] = this.get(`user_option.${s}`);
+    });
 
     ['muted','watched','tracked'].forEach(s => {
       let cats = this.get(s + 'Categories').map(c => c.get('id'));
@@ -174,7 +182,7 @@ const User = RestModel.extend({
     });
 
     if (!Discourse.SiteSettings.edit_history_visible_to_public) {
-      data['edit_history_public'] = this.get('edit_history_public');
+      data['edit_history_public'] = this.get('user_option.edit_history_public');
     }
 
     // TODO: We can remove this when migrated fully to rest model.
@@ -184,7 +192,7 @@ const User = RestModel.extend({
       type: 'PUT'
     }).then(result => {
       this.set('bio_excerpt', result.user.bio_excerpt);
-      const userProps = this.getProperties('enable_quoting', 'external_links_in_new_tab', 'dynamic_favicon');
+      const userProps = Em.getProperties(this.get('user_option'),'enable_quoting', 'external_links_in_new_tab', 'dynamic_favicon');
       Discourse.User.current().setProperties(userProps);
     }).finally(() => {
       this.set('isSaving', false);
@@ -382,17 +390,14 @@ const User = RestModel.extend({
   summary() {
     return Discourse.ajax(`/users/${this.get("username_lower")}/summary.json`)
            .then(json => {
-              const topicMap = {};
-
-              json.topics.forEach(t => {
-                topicMap[t.id] = Topic.create(t);
-              });
-
-              const badgeMap = {};
-              Badge.createFromJson(json).forEach(b => {
-                badgeMap[b.id] = b;
-              });
               const summary = json["user_summary"];
+              const topicMap = {};
+              const badgeMap = {};
+
+              json.topics.forEach(t => topicMap[t.id] = Topic.create(t));
+              Badge.createFromJson(json).forEach(b => badgeMap[b.id] = b );
+
+              summary.topics = summary.topic_ids.map(id => topicMap[id]);
 
               summary.replies.forEach(r => {
                 r.topic = topicMap[r.topic_id];
@@ -400,13 +405,19 @@ const User = RestModel.extend({
                 r.createdAt = new Date(r.created_at);
               });
 
-              summary.topics = summary.topic_ids.map(id => topicMap[id]);
-
-              summary.badges = summary.badges.map(ub => {
-                const badge = badgeMap[ub.badge_id];
-                badge.count = ub.count;
-                return badge;
+              summary.links.forEach(l => {
+                l.topic = topicMap[l.topic_id];
+                l.post_url = l.topic.urlForPostNumber(l.post_number);
               });
+
+              if (summary.badges) {
+                summary.badges = summary.badges.map(ub => {
+                  const badge = badgeMap[ub.badge_id];
+                  badge.count = ub.count;
+                  return badge;
+                });
+              }
+
               return summary;
            });
   }

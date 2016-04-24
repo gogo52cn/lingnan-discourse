@@ -37,7 +37,7 @@ class Admin::UsersController < Admin::AdminController
   end
 
   def show
-    @user = User.find_by(username_lower: params[:id])
+    @user = User.find_by(id: params[:id])
     raise Discourse::NotFound unless @user
     render_serialized(@user, AdminDetailedUserSerializer, root: false)
   end
@@ -282,9 +282,13 @@ class Admin::UsersController < Admin::AdminController
     return render nothing: true, status: 404 unless SiteSetting.enable_sso
 
     sso = DiscourseSingleSignOn.parse("sso=#{params[:sso]}&sig=#{params[:sig]}")
-    user = sso.lookup_or_create_user
 
-    render_serialized(user, AdminDetailedUserSerializer, root: false)
+    begin
+      user = sso.lookup_or_create_user
+      render_serialized(user, AdminDetailedUserSerializer, root: false)
+    rescue ActiveRecord::RecordInvalid => ex
+      render json: failed_json.merge(message: ex.message), status: 403
+    end
   end
 
   def delete_other_accounts_with_same_ip
@@ -332,7 +336,7 @@ class Admin::UsersController < Admin::AdminController
     email_token = user.email_tokens.create(email: user.email)
 
     unless params[:send_email] == '0' || params[:send_email] == 'false'
-      Jobs.enqueue( :user_email,
+      Jobs.enqueue( :critical_user_email,
                     type: :account_created,
                     user_id: user.id,
                     email_token: email_token.token)

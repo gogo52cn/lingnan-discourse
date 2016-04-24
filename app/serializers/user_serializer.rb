@@ -61,40 +61,31 @@ class UserSerializer < BasicUserSerializer
              :uploaded_avatar_id,
              :badge_count,
              :has_title_badges,
-             :edit_history_public,
              :custom_fields,
              :user_fields,
              :topic_post_count,
              :pending_count,
-             :profile_view_count,
-             :automatically_unpin_topics
+             :profile_view_count
 
   has_one :invited_by, embed: :object, serializer: BasicUserSerializer
   has_many :groups, embed: :object, serializer: BasicGroupSerializer
   has_many :featured_user_badges, embed: :ids, serializer: UserBadgeSerializer, root: :user_badges
   has_one  :card_badge, embed: :object, serializer: BadgeSerializer
+  has_one :user_option, embed: :object, serializer: UserOptionSerializer
+
+  def include_user_option?
+    can_edit
+  end
 
   staff_attributes :post_count,
                    :can_be_deleted,
                    :can_delete_all_posts
 
   private_attributes :locale,
-                     :email_digests,
-                     :email_private_messages,
-                     :email_direct,
-                     :email_always,
-                     :digest_after_days,
-                     :mailing_list_mode,
-                     :auto_track_topics_after_msecs,
-                     :new_topic_duration_minutes,
-                     :external_links_in_new_tab,
-                     :dynamic_favicon,
-                     :enable_quoting,
                      :muted_category_ids,
                      :tracked_category_ids,
                      :watched_category_ids,
                      :private_messages_stats,
-                     :disable_jump_reply,
                      :system_avatar_upload_id,
                      :system_avatar_template,
                      :gravatar_avatar_upload_id,
@@ -104,7 +95,8 @@ class UserSerializer < BasicUserSerializer
                      :has_title_badges,
                      :card_image_badge,
                      :card_image_badge_id,
-                     :muted_usernames
+                     :muted_usernames,
+                     :mailing_list_posts_per_day
 
   untrusted_attributes :bio_raw,
                        :bio_cooked,
@@ -117,6 +109,11 @@ class UserSerializer < BasicUserSerializer
   ###
   ### ATTRIBUTES
   ###
+
+  def mailing_list_posts_per_day
+    val = Post.estimate_posts_per_day
+    [val,SiteSetting.max_emails_per_day_per_user].min
+  end
 
   def groups
     if scope.is_admin? || object.id == scope.user.try(:id)
@@ -147,19 +144,9 @@ class UserSerializer < BasicUserSerializer
   end
 
   def website_name
-    website_host = URI(website.to_s).host rescue nil
-    discourse_host = Discourse.current_hostname
-    return if website_host.nil?
-    if website_host == discourse_host
-      # example.com == example.com
-      website_host + URI(website.to_s).path
-    elsif (website_host.split('.').length == discourse_host.split('.').length) && discourse_host.split('.').length > 2
-      # www.example.com == forum.example.com
-      website_host.split('.')[1..-1].join('.') == discourse_host.split('.')[1..-1].join('.') ? website_host + URI(website.to_s).path : website_host
-    else
-      # example.com == forum.example.com
-      discourse_host.ends_with?("." << website_host) ? website_host + URI(website.to_s).path : website_host
-    end
+    uri = URI(website.to_s) rescue nil
+    return if uri.nil? || uri.host.nil?
+    uri.host.sub(/^www\./,'') + uri.path
   end
 
   def include_website_name
@@ -260,14 +247,6 @@ class UserSerializer < BasicUserSerializer
   ### PRIVATE ATTRIBUTES
   ###
 
-  def auto_track_topics_after_msecs
-    object.auto_track_topics_after_msecs || SiteSetting.default_other_auto_track_topics_after_msecs
-  end
-
-  def new_topic_duration_minutes
-    object.new_topic_duration_minutes || SiteSetting.default_other_new_topic_duration_minutes
-  end
-
   def muted_category_ids
     CategoryUser.lookup(object, :muted).pluck(:category_id)
   end
@@ -322,10 +301,6 @@ class UserSerializer < BasicUserSerializer
     object.badges.where(allow_title: true).count > 0
   end
 
-  def include_edit_history_public?
-    can_edit && !SiteSetting.edit_history_visible_to_public
-  end
-
   def user_fields
     object.user_fields
   end
@@ -339,15 +314,10 @@ class UserSerializer < BasicUserSerializer
   end
 
   def custom_fields
-    fields = nil
+    fields = User.whitelisted_user_custom_fields(scope)
 
     if scope.can_edit?(object)
-      fields = DiscoursePluginRegistry.serialized_current_user_fields.to_a
-    end
-
-    if SiteSetting.public_user_custom_fields.present?
-      fields ||= []
-      fields += SiteSetting.public_user_custom_fields.split('|')
+      fields += DiscoursePluginRegistry.serialized_current_user_fields.to_a
     end
 
     if fields.present?

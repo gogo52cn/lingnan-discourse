@@ -49,6 +49,10 @@ class TopicsController < ApplicationController
     # existing installs.
     return wordpress if params[:best].present?
 
+    # work around people somehow sending in arrays,
+    # arrays are not supported
+    params[:page] = params[:page].to_i rescue 1
+
     opts = params.slice(:username_filters, :filter, :page, :post_number, :show_deleted)
     username_filters = opts[:username_filters]
 
@@ -65,7 +69,7 @@ class TopicsController < ApplicationController
       raise Discourse::NotFound
     end
 
-    page = params[:page].to_i
+    page = params[:page]
     if (page < 0) || ((page - 1) * @topic_view.chunk_size > @topic_view.topic.highest_post_number)
       raise Discourse::NotFound
     end
@@ -150,7 +154,7 @@ class TopicsController < ApplicationController
 
   def posts
     params.require(:topic_id)
-    params.require(:post_ids)
+    params.permit(:post_ids)
 
     @topic_view = TopicView.new(params[:topic_id], current_user, post_ids: params[:post_ids])
     render_json_dump(TopicViewPostsSerializer.new(@topic_view, scope: guardian, root: false, include_raw: !!params[:include_raw]))
@@ -529,7 +533,7 @@ class TopicsController < ApplicationController
     url << "/#{post_number}" if post_number.to_i > 0
     url << ".json" if request.format.json?
 
-    page = params[:page].to_i
+    page = params[:page]
     url << "?page=#{page}" if page != 0
 
     redirect_to url, status: 301

@@ -48,6 +48,11 @@ HTML
       expect(PrettyText.cook('@hello @hello @hello')).to match_html "<p><span class=\"mention\">@hello</span> <span class=\"mention\">@hello</span> <span class=\"mention\">@hello</span></p>"
     end
 
+    it "should handle group mentions with a hyphen and without" do
+      expect(PrettyText.cook('@hello @hello-hello')).to match_html "<p><span class=\"mention\">@hello</span> <span class=\"mention\">@hello-hello</span></p>"
+    end
+
+
     it "should sanitize the html" do
       expect(PrettyText.cook("<script>alert(42)</script>")).to match_html "<p></p>"
     end
@@ -183,6 +188,10 @@ HTML
       expect(PrettyText.extract_links("<aside class='quote'>not a linked quote</aside>\n").to_a).to be_empty
     end
 
+    it "doesn't extract links from elided parts" do
+      expect(PrettyText.extract_links("<details class='elided'><a href='http://cnn.com'>cnn</a></details>\n").to_a).to be_empty
+    end
+
     def extract_urls(text)
       PrettyText.extract_links(text).map(&:url).to_a
     end
@@ -197,6 +206,10 @@ HTML
 
     it "should extract links to posts" do
       expect(extract_urls("<aside class=\"quote\" data-topic=\"1234\" data-post=\"4567\">aside</aside>")).to eq(["/t/topic/1234/4567"])
+    end
+
+    it "should not extract links to anchors" do
+      expect(extract_urls("<a href='#tos'>TOS</a>")).to eq([])
     end
 
     it "should not extract links inside quotes" do
@@ -390,8 +403,16 @@ HTML
       expect(PrettyText.cook("💣")).to match(/\:bomb\:/)
     end
 
+    it "doesn't replace emoji in inline code blocks with our emoji sets if emoji is enabled" do
+      expect(PrettyText.cook("`💣`")).not_to match(/\:bomb\:/)
+    end
+
+    it "doesn't replace emoji in code blocks with our emoji sets if emoji is enabled" do
+      expect(PrettyText.cook("```\n💣`\n```\n")).not_to match(/\:bomb\:/)
+    end
+
     it "replaces some glyphs that are not in the emoji range" do
-      expect(PrettyText.cook("☺")).to match(/\:slightly_smiling\:/)
+      expect(PrettyText.cook("☺")).to match(/\:slight_smile\:/)
     end
 
     it "doesn't replace unicode emoji if emoji is disabled" do

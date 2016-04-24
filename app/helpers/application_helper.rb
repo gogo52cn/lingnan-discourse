@@ -60,7 +60,7 @@ module ApplicationHelper
   end
 
   def rtl_class
-    RTL.new(current_user).css_class
+    rtl? ? 'rtl' : ''
   end
 
   def escape_unicode(javascript)
@@ -74,8 +74,9 @@ module ApplicationHelper
     end
   end
 
-  def unescape_emoji(title)
+  def format_topic_title(title)
     PrettyText.unescape_emoji(title)
+    strip_tags(title)
   end
 
   def with_format(format, &block)
@@ -111,7 +112,7 @@ module ApplicationHelper
   end
 
   def rtl?
-    ["ar", "fa_IR", "he"].include?(user_locale)
+    ["ar", "fa_IR", "he"].include? I18n.locale.to_s
   end
 
   def user_locale
@@ -156,6 +157,20 @@ module ApplicationHelper
     result.join("\n")
   end
 
+  def render_sitelinks_search_tag
+    json = {
+      '@context' => 'http://schema.org',
+      '@type' => 'WebSite',
+      url: Discourse.base_url,
+      potentialAction: {
+        '@type' => 'SearchAction',
+        target: "#{Discourse.base_url}/search?q={search_term_string}",
+        'query-input' => 'required name=search_term_string',
+      }
+    }
+    content_tag(:script, MultiJson.dump(json).html_safe, type: 'application/ld+json'.freeze)
+  end
+
   def application_logo_url
     @application_logo_url ||= (mobile_view? && SiteSetting.mobile_logo_url) || SiteSetting.logo_url
   end
@@ -166,6 +181,14 @@ module ApplicationHelper
 
   def mobile_view?
     MobileDetection.resolve_mobile_view!(request.user_agent,params,session)
+  end
+
+  def crawler_layout?
+    controller.try(:use_crawler_layout?)
+  end
+
+  def include_crawler_content?
+    crawler_layout? || !mobile_view?
   end
 
   def mobile_device?

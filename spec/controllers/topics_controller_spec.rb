@@ -563,6 +563,11 @@ describe TopicsController do
       expect(response).to redirect_to(topic.relative_url + "/42?page=123")
     end
 
+    it 'does not accept page params as an array' do
+      xhr :get, :show, id: topic.slug, post_number: 42, page: [2]
+      expect(response).to redirect_to("#{topic.relative_url}/42?page=1")
+    end
+
     it 'returns 404 when an invalid slug is given and no id' do
       xhr :get, :show, id: 'nope-nope'
       expect(response.status).to eq(404)
@@ -570,6 +575,11 @@ describe TopicsController do
 
     it 'returns a 404 when slug and topic id do not match a topic' do
       xhr :get, :show, topic_id: 123123, slug: 'topic-that-is-made-up'
+      expect(response.status).to eq(404)
+    end
+
+    it 'returns a 404 for an ID that is larger than postgres limits' do
+      xhr :get, :show, topic_id: 50142173232201640412, slug: 'topic-that-is-made-up'
       expect(response.status).to eq(404)
     end
 
@@ -800,6 +810,16 @@ describe TopicsController do
           expect(response.code.to_i).to be(403)
         end
       end
+    end
+  end
+
+  describe '#posts' do
+    let(:topic) { Fabricate(:post).topic }
+
+    it 'returns first posts of the topic' do
+      get :posts, topic_id: topic.id, format: :json
+      expect(response).to be_success
+      expect(response.content_type).to eq('application/json')
     end
   end
 

@@ -17,6 +17,9 @@ module Email
   class MessageBuilder
     attr_reader :template_args
 
+    REPLY_TO_AUTO_GENERATED_HEADER_KEY = "X-Discourse-Reply-to-Auto-Generated".freeze
+    REPLY_TO_AUTO_GENERATED_HEADER_VALUE = "marked".freeze
+
     def initialize(to, opts=nil)
       @to = to
       @opts = opts || {}
@@ -28,16 +31,18 @@ module Email
       }.merge!(@opts)
 
       if @template_args[:url].present?
-        @template_args[:header_instructions] = I18n.t('user_notifications.header_instructions')
+        @template_args[:header_instructions] = I18n.t('user_notifications.header_instructions', locale: @opts[:locale])
 
         if @opts[:include_respond_instructions] == false
           @template_args[:respond_instructions] = ''
         else
-          @template_args[:respond_instructions] = if allow_reply_by_email?
-            I18n.t('user_notifications.reply_by_email', @template_args)
+          if @opts[:only_reply_by_email]
+            string = "user_notifications.only_reply_by_email"
           else
-            I18n.t('user_notifications.visit_link_to_respond', @template_args)
+            string = allow_reply_by_email? ? "user_notifications.reply_by_email" : "user_notifications.visit_link_to_respond"
+            string << "_pm" if @opts[:private_reply]
           end
+          @template_args[:respond_instructions] = "---\n" + I18n.t(string, @template_args)
         end
       end
     end
@@ -65,7 +70,7 @@ module Email
         html_override.gsub!("%{unsubscribe_link}", unsubscribe_link)
 
         if SiteSetting.unsubscribe_via_email_footer && @opts[:add_unsubscribe_via_email_link]
-          unsubscribe_via_email_link = PrettyText.cook(I18n.t('unsubscribe_via_email_link', hostname: Discourse.current_hostname), sanitize: false).html_safe
+          unsubscribe_via_email_link = PrettyText.cook(I18n.t('unsubscribe_via_email_link', hostname: Discourse.current_hostname, locale: @opts[:locale]), sanitize: false).html_safe
           html_override.gsub!("%{unsubscribe_via_email_link}", unsubscribe_via_email_link)
         else
           html_override.gsub!("%{unsubscribe_via_email_link}", "")
@@ -112,7 +117,7 @@ module Email
         body << "\n"
         body << I18n.t('unsubscribe_link', template_args)
         if SiteSetting.unsubscribe_via_email_footer && @opts[:add_unsubscribe_via_email_link]
-          body << I18n.t('unsubscribe_via_email_link', hostname: Discourse.current_hostname)
+          body << I18n.t('unsubscribe_via_email_link', hostname: Discourse.current_hostname, locale: @opts[:locale])
         end
       end
 
@@ -130,7 +135,11 @@ module Email
     def header_args
       result = {}
       if @opts[:add_unsubscribe_link]
-        result['List-Unsubscribe'] = "<#{template_args[:user_preferences_url]}>" if @opts[:add_unsubscribe_link]
+        result['List-Unsubscribe'] = "<#{template_args[:user_preferences_url]}>"
+      end
+
+      if @opts[:mark_as_reply_to_auto_generated]
+        result[REPLY_TO_AUTO_GENERATED_HEADER_KEY] = REPLY_TO_AUTO_GENERATED_HEADER_VALUE
       end
 
       result['X-Discourse-Post-Id'] = @opts[:post_id].to_s if @opts[:post_id]

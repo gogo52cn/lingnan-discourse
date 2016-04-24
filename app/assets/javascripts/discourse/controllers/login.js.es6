@@ -69,6 +69,9 @@ export default Ember.Controller.extend(ModalFunctionality, {
               sentTo: result.sent_to_email,
               currentEmail: result.current_email
             });
+          } else if (result.reason === 'suspended' ) {
+            self.send("closeModal");
+            bootbox.alert(result.error);
           } else {
             self.flash(result.error, 'error');
           }
@@ -126,7 +129,7 @@ export default Ember.Controller.extend(ModalFunctionality, {
       if(customLogin){
         customLogin();
       } else {
-        var authUrl = Discourse.getURL("/auth/" + name);
+        const authUrl = loginMethod.get('customUrl') || Discourse.getURL("/auth/" + name);
         if (loginMethod.get("fullScreenLogin")) {
           window.location = authUrl;
         } else {

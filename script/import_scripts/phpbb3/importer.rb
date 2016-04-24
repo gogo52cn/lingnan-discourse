@@ -33,6 +33,12 @@ module ImportScripts::PhpBB3
       import_bookmarks if @settings.import_bookmarks
     end
 
+    def change_site_settings
+      super
+
+      @importers.permalink_importer.change_site_settings
+    end
+
     def get_site_settings_for_import
       settings = super
 
@@ -149,8 +155,9 @@ module ImportScripts::PhpBB3
       # no need for this since the importer sets last_seen_at for each user during the import
     end
 
+    # Do not use the bbcode_to_md in base.rb. It will be used in text_processor.rb instead.
     def use_bbcode_to_md?
-      @settings.use_bbcode_to_md
+      false
     end
 
     def batches

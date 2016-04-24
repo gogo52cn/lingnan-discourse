@@ -28,7 +28,7 @@ const bindings = {
   'home':            {handler: 'goToFirstPost', anonymous: true},
   'j':               {handler: 'selectDown', anonymous: true},
   'k':               {handler: 'selectUp', anonymous: true},
-  'l':               {click: '.topic-post.selected button[data-action="like"]'},
+  'l':               {click: '.topic-post.selected button.toggle-like'},
   'm m':             {click: 'div.notification-options li[data-id="0"] a'}, // mark topic as muted
   'm r':             {click: 'div.notification-options li[data-id="1"] a'}, // mark topic as regular
   'm t':             {click: 'div.notification-options li[data-id="2"] a'}, // mark topic as tracking
@@ -158,7 +158,7 @@ export default {
 
     // If we're viewing a topic, only intercept search if there are cloaked posts
     if (showSearch && currentPath.match(/^topic\./)) {
-      showSearch = $('.cooked').length < this.container.lookup('controller:topic').get('model.postStream.stream.length');
+      showSearch = $('.topic-post .cooked, .small-action:not(.time-gap)').length < this.container.lookup('controller:topic').get('model.postStream.stream.length');
     }
 
     if (showSearch) {
@@ -222,10 +222,14 @@ export default {
     // TODO: We should keep track of the post without a CSS class
     const selectedPostId = parseInt($('.topic-post.selected article.boxed').data('post-id'), 10);
     if (selectedPostId) {
-      const topicController = container.lookup('controller:topic'),
-          post = topicController.get('model.postStream.posts').findBy('id', selectedPostId);
+      const topicController = container.lookup('controller:topic');
+      const post = topicController.get('model.postStream.posts').findBy('id', selectedPostId);
       if (post) {
-        topicController.send(action, post);
+        // TODO: Use ember closure actions
+        const result = topicController._actions[action].call(topicController, post);
+        if (result && result.then) {
+          this.appEvents.trigger('post-stream:refresh', { id: selectedPostId });
+        }
       }
     }
   },
@@ -287,7 +291,7 @@ export default {
       index = 0;
       $articles.each(function() {
         const top = $(this).position().top;
-        if (top > scrollTop) {
+        if (top >= scrollTop) {
           return false;
         }
         index += 1;
@@ -312,12 +316,7 @@ export default {
       }
 
       if ($article.is('.topic-post')) {
-        let tabLoc = $article.find('a.tabLoc');
-        if (tabLoc.length === 0) {
-          tabLoc = $('<a href class="tabLoc"></a>');
-          $article.prepend(tabLoc);
-        }
-        tabLoc.focus();
+        $('a.tabLoc', $article).focus();
       }
 
       this._scrollList($article, direction);
@@ -328,15 +327,17 @@ export default {
     // Try to keep the article on screen
     const pos = $article.offset();
     const height = $article.height();
+    const headerHeight = $('header.d-header').height();
     const scrollTop = $(window).scrollTop();
     const windowHeight = $(window).height();
 
     // skip if completely on screen
-    if (pos.top > scrollTop && (pos.top + height) < (scrollTop + windowHeight)) {
+    if ((pos.top - headerHeight) > scrollTop && (pos.top + height) < (scrollTop + windowHeight)) {
       return;
     }
 
     let scrollPos = (pos.top + (height/2)) - (windowHeight * 0.5);
+    if (height > (windowHeight - headerHeight)) { scrollPos = (pos.top - headerHeight); }
     if (scrollPos < 0) { scrollPos = 0; }
 
     if (this._scrollAnimation) {

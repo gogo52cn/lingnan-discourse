@@ -154,6 +154,7 @@ class PostRevisor
     POST_TRACKED_FIELDS.each do |field|
       return true if @fields.has_key?(field) && @fields[field] != @post.send(field)
     end
+    advance_draft_sequence
     false
   end
 
@@ -174,6 +175,7 @@ class PostRevisor
   end
 
   def ninja_edit?
+    return false if @post.has_active_flag?
     @revised_at - @last_version_at <= SiteSetting.editing_grace_period.to_i
   end
 
@@ -431,7 +433,14 @@ class PostRevisor
   end
 
   def publish_changes
-    @post.publish_change_to_clients!(:revised)
+    options =
+      if !@topic_changes.diff.empty? && !@topic_changes.errored?
+        { reload_topic: true }
+      else
+        {}
+      end
+
+    @post.publish_change_to_clients!(:revised, options)
   end
 
   def grant_badge
