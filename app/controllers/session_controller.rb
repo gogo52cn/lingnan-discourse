@@ -42,6 +42,7 @@ class SessionController < ApplicationController
         sso.city = current_user.custom_fields["user_field_7"]
         sso.mobile = current_user.custom_fields["user_field_8"]
         sso.major = current_user.custom_fields["user_field_2"]
+        sso.company = current_user.custom_fields["user_field_6"]
         sso.external_id = current_user.id.to_s
         sso.admin = current_user.admin?
         sso.moderator = current_user.moderator?
